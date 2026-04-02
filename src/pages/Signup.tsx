@@ -37,7 +37,6 @@ const Signup = () => {
       return;
     }
 
-    // Update profile with extra info
     if (authData.user) {
       await supabase
         .from("profiles")
@@ -59,7 +58,7 @@ const Signup = () => {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary">Onbord</h1>
+          <h1 className="text-3xl font-bold text-foreground">Onbord</h1>
           <p className="mt-2 text-muted-foreground">Créez votre compte entreprise</p>
         </div>
         <Card>
@@ -103,7 +102,7 @@ const Signup = () => {
         </Card>
         <p className="text-center text-sm text-muted-foreground">
           Déjà un compte ?{" "}
-          <Link to="/login" className="font-medium text-primary hover:underline">
+          <Link to="/login" className="font-medium text-foreground hover:underline">
             Se connecter
           </Link>
         </p>

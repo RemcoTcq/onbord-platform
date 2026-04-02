@@ -2,12 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Onest:wght@300;400;500;600;700;800&display=swap');
 
 @layer base {
   :root {
     --background: 210 80% 11%;
-    --foreground: 210 20% 95%;
+    --foreground: 0 0% 100%;
 
     --card: 0 0% 100%;
     --card-foreground: 210 83% 16%;
@@ -22,7 +22,7 @@
     --secondary-foreground: 210 20% 92%;
 
     --muted: 210 40% 16%;
-    --muted-foreground: 210 20% 65%;
+    --muted-foreground: 210 20% 75%;
 
     --accent: 210 60% 22%;
     --accent-foreground: 0 0% 100%;
@@ -59,7 +59,6 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', system-ui, sans-serif;
   }
 }
 

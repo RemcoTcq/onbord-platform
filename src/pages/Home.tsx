@@ -52,7 +52,7 @@ const Home = () => {
       <div className="mx-auto max-w-5xl space-y-12">
         {/* Hero */}
         <div className="rounded-2xl bg-gradient-to-br from-accent to-secondary p-8 lg:p-12">
-          <h1 className="text-3xl font-extrabold tracking-tight lg:text-4xl">
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground lg:text-4xl">
             Trouvez les bons talents<br />étudiants rapidement
           </h1>
           <p className="mt-4 max-w-xl text-muted-foreground text-lg">
@@ -68,7 +68,7 @@ const Home = () => {
 
         {/* 3 Steps */}
         <div>
-          <h2 className="text-xl font-bold mb-6">Comment ça marche</h2>
+          <h2 className="text-xl font-bold text-foreground mb-6">Comment ça marche</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             {steps.map((step, i) => (
               <Card key={i} className="card-hover">
@@ -140,7 +140,7 @@ const Home = () => {
         {recent.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">Dernières demandes</h2>
+              <h2 className="text-xl font-bold text-foreground">Dernières demandes</h2>
               <Link to="/requests">
                 <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
                   Voir tout <ArrowRight className="h-3 w-3" />

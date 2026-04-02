@@ -69,7 +69,7 @@ const RequestDetail = () => {
         {/* Header */}
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold">{request.title}</h1>
+            <h1 className="text-2xl font-bold text-foreground">{request.title}</h1>
             <p className="text-muted-foreground">{request.domain}</p>
           </div>
           <Button onClick={handleGenerateOffer} disabled={generating} className="gap-2 bg-card text-card-foreground hover:bg-card/90">
