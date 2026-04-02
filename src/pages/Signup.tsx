@@ -38,7 +38,9 @@ const Signup = () => {
     }
 
     if (authData.user) {
-      await supabase
+      // Wait a moment for the trigger to create the profile
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: firstName,
@@ -47,6 +49,10 @@ const Signup = () => {
           company_role: companyRole,
         })
         .eq("user_id", authData.user.id);
+      
+      if (profileError) {
+        console.warn("Profile update failed, will retry on next login:", profileError.message);
+      }
     }
 
     setLoading(false);
