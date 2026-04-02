@@ -143,9 +143,21 @@ const RequestDetail = () => {
         <Card>
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-card-foreground mb-4">Progression</h3>
-            <div className="flex items-center justify-between">
+            <div className="relative flex items-start justify-between">
+              {/* Continuous background line */}
+              <div className="absolute top-5 left-0 right-0 h-0.5 bg-card-foreground/10" style={{ marginLeft: 'calc(50% / ' + STATUSES.length + ')', marginRight: 'calc(50% / ' + STATUSES.length + ')' }} />
+              {/* Progress line */}
+              {currentIdx > 0 && (
+                <div
+                  className="absolute top-5 left-0 h-0.5 bg-success"
+                  style={{
+                    marginLeft: `calc(50% / ${STATUSES.length})`,
+                    width: `calc(${(currentIdx / (STATUSES.length - 1)) * 100}% - 2 * (50% / ${STATUSES.length}) * ${currentIdx / (STATUSES.length - 1)})`,
+                  }}
+                />
+              )}
               {STATUSES.map((status, i) => (
-                <div key={status} className="flex flex-col items-center flex-1 relative">
+                <div key={status} className="flex flex-col items-center flex-1">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-full z-10 transition-all ${
                     i <= currentIdx
                       ? "bg-success text-success-foreground shadow-lg shadow-success/20"
@@ -158,11 +170,6 @@ const RequestDetail = () => {
                   }`}>
                     {status}
                   </span>
-                  {i < STATUSES.length - 1 && (
-                    <div className={`absolute top-5 left-[55%] w-full h-0.5 -z-0 ${
-                      i < currentIdx ? "bg-success" : "bg-card-foreground/10"
-                    }`} />
-                  )}
                 </div>
               ))}
             </div>
