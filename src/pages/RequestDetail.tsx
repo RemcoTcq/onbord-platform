@@ -143,29 +143,35 @@ const RequestDetail = () => {
         <Card>
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-card-foreground mb-4">Progression</h3>
-            <div className="flex items-center justify-between">
-              {STATUSES.map((status, i) => (
-                <div key={status} className="flex flex-col items-center flex-1 relative">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-full z-10 transition-all ${
-                    i <= currentIdx
-                      ? "bg-success text-success-foreground shadow-lg shadow-success/20"
-                      : "bg-card-foreground/10 text-card-foreground/30"
-                  }`}>
-                    {i <= currentIdx ? <Check className="h-5 w-5" /> : <Clock className="h-4 w-4" />}
-                  </div>
-                  <span className={`mt-2 text-xs text-center max-w-[100px] ${
-                    i <= currentIdx ? "font-medium text-card-foreground" : "text-card-foreground/40"
-                  }`}>
-                    {status}
-                  </span>
-                  {i < STATUSES.length - 1 && (
-                    <div className={`absolute top-5 left-[55%] w-full h-0.5 -z-0 ${
-                      i < currentIdx ? "bg-success" : "bg-card-foreground/10"
-                    }`} />
+            {(() => {
+              const count = STATUSES.length;
+              const halfStep = `${50 / count}%`;
+              const progressWidth = currentIdx > 0 ? `${(currentIdx / (count - 1)) * (100 - 100 / count)}%` : '0%';
+              return (
+                <div className="relative flex items-start justify-between">
+                  <div className="absolute top-5 h-0.5 bg-card-foreground/10" style={{ left: halfStep, right: halfStep }} />
+                  {currentIdx > 0 && (
+                    <div className="absolute top-5 h-0.5 bg-success" style={{ left: halfStep, width: progressWidth }} />
                   )}
+                  {STATUSES.map((status, i) => (
+                    <div key={status} className="flex flex-col items-center flex-1">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-full z-10 transition-all ${
+                        i <= currentIdx
+                          ? "bg-success text-success-foreground shadow-lg shadow-success/20"
+                          : "bg-card-foreground/10 text-card-foreground/30"
+                      }`}>
+                        {i <= currentIdx ? <Check className="h-5 w-5" /> : <Clock className="h-4 w-4" />}
+                      </div>
+                      <span className={`mt-2 text-xs text-center max-w-[100px] ${
+                        i <= currentIdx ? "font-medium text-card-foreground" : "text-card-foreground/40"
+                      }`}>
+                        {status}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </CardContent>
         </Card>
 
