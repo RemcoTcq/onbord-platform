@@ -144,17 +144,11 @@ const RequestDetail = () => {
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-card-foreground mb-4">Progression</h3>
             <div className="relative flex items-start justify-between">
-              {/* Continuous background line */}
-              <div className="absolute top-5 left-0 right-0 h-0.5 bg-card-foreground/10" style={{ marginLeft: 'calc(50% / ' + STATUSES.length + ')', marginRight: 'calc(50% / ' + STATUSES.length + ')' }} />
-              {/* Progress line */}
+              {/* Single straight background line connecting first to last circle */}
+              <div className="absolute top-5 h-0.5 bg-card-foreground/10" style={{ left: `calc(100% / ${STATUSES.length} / 2)`, right: `calc(100% / ${STATUSES.length} / 2)` }} />
+              {/* Progress overlay */}
               {currentIdx > 0 && (
-                <div
-                  className="absolute top-5 left-0 h-0.5 bg-success"
-                  style={{
-                    marginLeft: `calc(50% / ${STATUSES.length})`,
-                    width: `calc(${(currentIdx / (STATUSES.length - 1)) * 100}% - 2 * (50% / ${STATUSES.length}) * ${currentIdx / (STATUSES.length - 1)})`,
-                  }}
-                />
+                <div className="absolute top-5 h-0.5 bg-success" style={{ left: `calc(100% / ${STATUSES.length} / 2)`, width: `calc(${currentIdx} / ${STATUSES.length - 1} * (100% - 100% / ${STATUSES.length}))` }} />
               )}
               {STATUSES.map((status, i) => (
                 <div key={status} className="flex flex-col items-center flex-1">
