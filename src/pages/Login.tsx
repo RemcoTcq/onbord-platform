@@ -30,12 +30,21 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      toast.error("Identifiants incorrects");
-    } else {
-      navigate("/dashboard");
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (error.message.includes("Email not confirmed")) {
+          toast.error("Veuillez confirmer votre email avant de vous connecter");
+        } else {
+          toast.error("Identifiants incorrects");
+        }
+      } else {
+        navigate("/dashboard");
+      }
+    } catch (err) {
+      toast.error("Erreur de connexion, réessayez");
+    } finally {
+      setLoading(false);
     }
   };
 
