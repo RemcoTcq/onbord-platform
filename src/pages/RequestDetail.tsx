@@ -35,9 +35,6 @@ const RequestDetail = () => {
       supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => setIsAdmin(!!data));
     }
   }, [user]);
-  const [request, setRequest] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     supabase.from("requests").select("*").eq("id", id).single().then(({ data }) => {
@@ -68,6 +65,18 @@ const RequestDetail = () => {
     }
   };
 
+  const handleDelete = async () => {
+    const { error } = await supabase.from("requests").delete().eq("id", id);
+    if (error) {
+      toast.error("Erreur lors de la suppression");
+    } else {
+      toast.success("Demande supprimée");
+      navigate(isAdmin ? "/admin" : "/requests");
+    }
+  };
+
+  const canDelete = user && request && (request.user_id === user.id || isAdmin);
+
   if (loading) {
     return (
       <AppLayout>
@@ -96,10 +105,35 @@ const RequestDetail = () => {
             <h1 className="text-2xl font-bold text-foreground">{request.title}</h1>
             <p className="text-muted-foreground">{request.domain}</p>
           </div>
-          <Button onClick={handleGenerateOffer} disabled={generating} className="gap-2 bg-card text-card-foreground hover:bg-card/90">
-            {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
-            {generating ? "Génération..." : "Télécharger l'offre"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button onClick={handleGenerateOffer} disabled={generating} className="gap-2 bg-card text-card-foreground hover:bg-card/90">
+              {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+              {generating ? "Génération..." : "Télécharger l'offre"}
+            </Button>
+            {canDelete && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="icon">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Supprimer cette demande ?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Cette action est irréversible. La demande sera définitivement supprimée.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      Supprimer
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
         </div>
 
         {/* Timeline */}
