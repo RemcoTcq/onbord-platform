@@ -44,12 +44,10 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <div className="flex h-16 items-center px-4">
         {!collapsed && (
-          <span className="text-xl font-bold text-sidebar-primary tracking-tight">
-            Onbord
-          </span>
+          <img src={onbordLogo} alt="Onbord" className="h-8 w-auto" />
         )}
         {collapsed && (
-          <span className="text-xl font-bold text-sidebar-primary">O</span>
+          <img src={onbordLogo} alt="Onbord" className="h-6 w-6 object-contain object-left" />
         )}
       </div>
 
