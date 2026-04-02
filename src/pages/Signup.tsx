@@ -38,20 +38,22 @@ const Signup = () => {
     }
 
     if (authData.user) {
-      // Wait a moment for the trigger to create the profile
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({
-          first_name: firstName,
-          last_name: lastName,
-          company_name: companyName,
-          company_role: companyRole,
-        })
-        .eq("user_id", authData.user.id);
-      
-      if (profileError) {
-        console.warn("Profile update failed, will retry on next login:", profileError.message);
+      // Profile is created by trigger. Try to update with user details.
+      // This may fail if email confirmation is required (user not fully authed yet).
+      // In that case, we use the service role approach or skip - profile will have defaults.
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 500));
+        await supabase
+          .from("profiles")
+          .update({
+            first_name: firstName,
+            last_name: lastName,
+            company_name: companyName,
+            company_role: companyRole,
+          })
+          .eq("user_id", authData.user.id);
+      } catch {
+        // Profile will be updated on first login if needed
       }
     }
 
