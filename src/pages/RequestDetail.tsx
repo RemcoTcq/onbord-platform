@@ -5,12 +5,15 @@ import { AppLayout } from "@/components/AppLayout";
 import { STATUSES } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Check, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Check, Clock, FileDown, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 const RequestDetail = () => {
   const { id } = useParams();
   const [request, setRequest] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   useEffect(() => {
     const fetch = async () => {
@@ -24,6 +27,34 @@ const RequestDetail = () => {
     };
     fetch();
   }, [id]);
+
+  const handleGenerateOffer = async () => {
+    setGenerating(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-job-offer", {
+        body: { requestId: id },
+      });
+
+      if (error) throw error;
+
+      const content = data?.content || "Erreur";
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `offre-${request?.title?.replace(/\s+/g, "-") || "emploi"}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Offre d'emploi générée et téléchargée !");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || "Erreur lors de la génération");
+    } finally {
+      setGenerating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -45,9 +76,15 @@ const RequestDetail = () => {
   return (
     <AppLayout>
       <div className="mx-auto max-w-3xl space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">{request.title}</h1>
-          <p className="text-muted-foreground">{request.domain}</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold">{request.title}</h1>
+            <p className="text-muted-foreground">{request.domain}</p>
+          </div>
+          <Button onClick={handleGenerateOffer} disabled={generating} className="gap-2">
+            {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
+            {generating ? "Génération..." : "Télécharger l'offre"}
+          </Button>
         </div>
 
         {/* Timeline */}
