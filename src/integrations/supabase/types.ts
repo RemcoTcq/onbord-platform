@@ -58,6 +58,8 @@ export type Database = {
           id: string
           languages: Json | null
           monthly_price: number
+          nice_to_have_skills: string[] | null
+          nice_to_have_soft_skills: string[] | null
           schedule_details: Json | null
           schedule_type: string
           skills: string[] | null
@@ -80,6 +82,8 @@ export type Database = {
           id?: string
           languages?: Json | null
           monthly_price?: number
+          nice_to_have_skills?: string[] | null
+          nice_to_have_soft_skills?: string[] | null
           schedule_details?: Json | null
           schedule_type?: string
           skills?: string[] | null
@@ -102,6 +106,8 @@ export type Database = {
           id?: string
           languages?: Json | null
           monthly_price?: number
+          nice_to_have_skills?: string[] | null
+          nice_to_have_soft_skills?: string[] | null
           schedule_details?: Json | null
           schedule_type?: string
           skills?: string[] | null
