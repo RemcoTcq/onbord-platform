@@ -1,7 +1,8 @@
 import { Home, Plus, FileText, Send, Shield, LogOut, User } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { Button } from "@/components/ui/button";
 import onbordLogo from "@/assets/onbord-logo.png";
 import {
@@ -27,9 +28,9 @@ const menuItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
   const navigate = useNavigate();
   const { isAdmin, signOut } = useAuth();
+  const { profile } = useProfile();
 
   const handleSignOut = async () => {
     await signOut();
@@ -39,6 +40,11 @@ export function AppSidebar() {
   const allItems = isAdmin
     ? [...menuItems, { title: "Admin", url: "/admin", icon: Shield }]
     : menuItems;
+
+  const displayName = profile
+    ? [profile.first_name, profile.last_name].filter(Boolean).join(" ")
+    : "";
+  const companyName = profile?.company_name || "";
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
@@ -75,7 +81,17 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3">
+      <SidebarFooter className="p-3 space-y-2">
+        {!collapsed && (displayName || companyName) && (
+          <div className="px-2 py-1.5">
+            {displayName && (
+              <p className="text-sm font-medium text-sidebar-foreground truncate">{displayName}</p>
+            )}
+            {companyName && (
+              <p className="text-xs text-sidebar-foreground/60 truncate">{companyName}</p>
+            )}
+          </div>
+        )}
         <Button
           variant="ghost"
           size="sm"

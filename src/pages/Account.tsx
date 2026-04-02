@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,65 +9,21 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-interface ProfileData {
-  first_name: string;
-  last_name: string;
-  company_name: string;
-  company_role: string;
-  vat_number: string;
-  street_address: string;
-  postal_code: string;
-  city: string;
-  country: string;
-  phone: string;
-}
-
 const Account = () => {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
+  const { profile: contextProfile, loading, refetch } = useProfile();
   const [saving, setSaving] = useState(false);
-  const [profile, setProfile] = useState<ProfileData>({
-    first_name: "",
-    last_name: "",
-    company_name: "",
-    company_role: "",
-    vat_number: "",
-    street_address: "",
-    postal_code: "",
-    city: "",
-    country: "Belgique",
-    phone: "",
-  });
+  const [form, setForm] = useState<Record<string, string> | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    const fetchProfile = async () => {
-      const { data } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .maybeSingle();
-      if (data) {
-        setProfile({
-          first_name: data.first_name || "",
-          last_name: data.last_name || "",
-          company_name: data.company_name || "",
-          company_role: data.company_role || "",
-          vat_number: (data as any).vat_number || "",
-          street_address: (data as any).street_address || "",
-          postal_code: (data as any).postal_code || "",
-          city: (data as any).city || "",
-          country: (data as any).country || "Belgique",
-          phone: (data as any).phone || "",
-        });
-      }
-      setLoading(false);
-    };
-    fetchProfile();
-  }, [user]);
+  // Initialize form from context profile
+  const profile = form ?? contextProfile;
+
+  const handleChange = (field: string, value: string) => {
+    setForm((prev) => ({ ...(prev ?? contextProfile ?? {}), [field]: value }));
+  };
 
   const handleSave = async () => {
-    if (!user) return;
+    if (!user || !profile) return;
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
@@ -77,14 +34,12 @@ const Account = () => {
       toast.error("Erreur lors de la sauvegarde");
     } else {
       toast.success("Profil mis à jour avec succès");
+      await refetch();
+      setForm(null);
     }
   };
 
-  const handleChange = (field: keyof ProfileData, value: string) => {
-    setProfile((prev) => ({ ...prev, [field]: value }));
-  };
-
-  if (loading) {
+  if (loading || !profile) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center h-64">
