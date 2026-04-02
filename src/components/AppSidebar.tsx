@@ -1,4 +1,4 @@
-import { Home, Plus, FileText, Send, Shield, LogOut, User } from "lucide-react";
+import { Home, Plus, FileText, Send, Shield, LogOut, User, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,20 +16,26 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const menuItems = [
   { title: "Accueil", url: "/dashboard", icon: Home },
   { title: "Nouvelle demande", url: "/request/new", icon: Plus },
   { title: "Brouillons", url: "/drafts", icon: FileText },
   { title: "Demandes", url: "/requests", icon: Send },
-  { title: "Mon compte", url: "/account", icon: User },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const navigate = useNavigate();
-  const { isAdmin, signOut } = useAuth();
+  const { isAdmin, signOut, user } = useAuth();
   const { profile } = useProfile();
 
   const handleSignOut = async () => {
@@ -45,6 +51,9 @@ export function AppSidebar() {
     ? [profile.first_name, profile.last_name].filter(Boolean).join(" ")
     : "";
   const companyName = profile?.company_name || "";
+  const initials = profile
+    ? [profile.first_name?.[0], profile.last_name?.[0]].filter(Boolean).join("").toUpperCase()
+    : "";
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
@@ -81,26 +90,42 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 space-y-2">
-        {!collapsed && (displayName || companyName) && (
-          <div className="px-2 py-1.5">
-            {displayName && (
-              <p className="text-sm font-medium text-sidebar-foreground truncate">{displayName}</p>
-            )}
-            {companyName && (
-              <p className="text-xs text-sidebar-foreground/60 truncate">{companyName}</p>
-            )}
-          </div>
-        )}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleSignOut}
-          className="w-full justify-start gap-3 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-        >
-          <LogOut className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>Déconnexion</span>}
-        </Button>
+      <SidebarFooter className="p-3">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-3 w-full rounded-lg px-2 py-2 hover:bg-sidebar-accent transition-colors text-left">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold">
+                {initials || <User className="h-4 w-4" />}
+              </div>
+              {!collapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-sidebar-foreground truncate">
+                    {displayName || user?.email || "Mon compte"}
+                  </p>
+                  {companyName && (
+                    <p className="text-xs text-sidebar-foreground/60 truncate">{companyName}</p>
+                  )}
+                </div>
+              )}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" side="top" className="w-56">
+            <div className="px-2 py-1.5">
+              <p className="text-sm font-medium truncate">{displayName || "Utilisateur"}</p>
+              <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+            </div>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate("/account")} className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              Paramètres du compte
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
+              <LogOut className="mr-2 h-4 w-4" />
+              Déconnexion
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </SidebarFooter>
     </Sidebar>
   );
