@@ -1,51 +1,192 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import { RequestFormData, defaultFormData } from "@/lib/request-types";
 import { StepTalentInfo } from "@/components/request/StepTalentInfo";
 import { StepJobDetails } from "@/components/request/StepJobDetails";
 import { StepPricing } from "@/components/request/StepPricing";
+import { StepRecap } from "@/components/request/StepRecap";
 import { StepConfirmation } from "@/components/request/StepConfirmation";
+import { Card, CardContent } from "@/components/ui/card";
+import { Check, Save } from "lucide-react";
 
-const steps = ["Talent", "Poste", "Tarif", "Confirmation"];
+const steps = ["Talent", "Détails", "Tarif", "Récap"];
 
 const NewRequest = () => {
+  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [step, setStep] = useState(0);
   const [data, setData] = useState<RequestFormData>(defaultFormData);
+  const [draftId, setDraftId] = useState<string | null>(searchParams.get("draft"));
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedId, setSubmittedId] = useState<string | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const initialized = useRef(false);
+
+  // Load draft if editing
+  useEffect(() => {
+    const loadDraft = async () => {
+      const id = searchParams.get("draft");
+      if (!id) { initialized.current = true; return; }
+      const { data: row } = await supabase.from("requests").select("*").eq("id", id).single();
+      if (row) {
+        setDraftId(id);
+        setData({
+          domain: row.domain || "",
+          mustHaveSkills: row.skills || [],
+          niceToHaveSkills: (row as any).nice_to_have_skills || [],
+          mustHaveSoftSkills: row.soft_skills || [],
+          niceToHaveSoftSkills: (row as any).nice_to_have_soft_skills || [],
+          customSkills: row.custom_skills || [],
+          languages: (row.languages as any) || [],
+          diploma: row.diploma || "",
+          title: row.title || "",
+          description: row.description || "",
+          talentsNumber: row.talents_number,
+          daysPerWeek: row.days_per_week,
+          scheduleType: row.schedule_type as "flexible" | "fixed",
+          scheduleDetails: (row.schedule_details as any) || {},
+          workMode: row.work_mode || "remote",
+          weeklyHours: Number(row.weekly_hours),
+          weeklyPrice: Number(row.weekly_price),
+          monthlyPrice: Number(row.monthly_price),
+        });
+      }
+      initialized.current = true;
+    };
+    loadDraft();
+  }, []);
+
+  // Auto-save as draft
+  const saveDraft = useCallback(async () => {
+    if (!user || !initialized.current) return;
+    setSaveStatus("saving");
+
+    const payload = {
+      user_id: user.id,
+      title: data.title || "Sans titre",
+      description: data.description,
+      domain: data.domain || "Non défini",
+      skills: data.mustHaveSkills,
+      nice_to_have_skills: data.niceToHaveSkills,
+      soft_skills: data.mustHaveSoftSkills,
+      nice_to_have_soft_skills: data.niceToHaveSoftSkills,
+      custom_skills: data.customSkills,
+      languages: data.languages as any,
+      diploma: data.diploma,
+      talents_number: data.talentsNumber,
+      days_per_week: data.daysPerWeek,
+      schedule_type: data.scheduleType,
+      schedule_details: data.scheduleDetails as any,
+      work_mode: data.workMode,
+      weekly_hours: data.weeklyHours,
+      weekly_price: data.weeklyPrice,
+      monthly_price: data.monthlyPrice,
+      status: "draft",
+    };
+
+    if (draftId) {
+      await supabase.from("requests").update(payload).eq("id", draftId);
+    } else {
+      const { data: row } = await supabase.from("requests").insert(payload).select("id").single();
+      if (row) {
+        setDraftId(row.id);
+        setSearchParams({ draft: row.id }, { replace: true });
+      }
+    }
+    setSaveStatus("saved");
+    setTimeout(() => setSaveStatus("idle"), 2000);
+  }, [user, data, draftId]);
+
+  useEffect(() => {
+    if (!initialized.current || submitted) return;
+    clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(saveDraft, 2000);
+    return () => clearTimeout(saveTimer.current);
+  }, [data, saveDraft, submitted]);
 
   const handleChange = (partial: Partial<RequestFormData>) => {
     setData((prev) => ({ ...prev, ...partial }));
   };
 
+  if (submitted) {
+    return (
+      <AppLayout>
+        <StepConfirmation requestId={submittedId} />
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
-      <div className="mx-auto max-w-2xl space-y-8">
-        {/* Stepper */}
-        <div className="flex items-center justify-between">
-          {steps.map((label, i) => (
-            <div key={label} className="flex items-center gap-2">
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold transition-colors ${
-                  i <= step
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {i + 1}
-              </div>
-              <span className={`hidden text-sm sm:inline ${i <= step ? "font-medium" : "text-muted-foreground"}`}>
-                {label}
-              </span>
-              {i < steps.length - 1 && (
-                <div className={`mx-2 h-px w-8 sm:w-16 ${i < step ? "bg-primary" : "bg-muted"}`} />
-              )}
-            </div>
-          ))}
+      <div className="mx-auto max-w-3xl space-y-6">
+        {/* Auto-save indicator */}
+        <div className="flex items-center justify-end gap-2 text-xs">
+          {saveStatus === "saving" && (
+            <span className="flex items-center gap-1 text-muted-foreground">
+              <Save className="h-3 w-3 animate-pulse" /> Sauvegarde...
+            </span>
+          )}
+          {saveStatus === "saved" && (
+            <span className="flex items-center gap-1 text-success">
+              <Check className="h-3 w-3" /> Brouillon enregistré
+            </span>
+          )}
         </div>
 
-        {step === 0 && <StepTalentInfo data={data} onChange={handleChange} onNext={() => setStep(1)} />}
-        {step === 1 && <StepJobDetails data={data} onChange={handleChange} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
-        {step === 2 && <StepPricing data={data} onChange={handleChange} onNext={() => setStep(3)} onBack={() => setStep(1)} />}
-        {step === 3 && <StepConfirmation data={data} onBack={() => setStep(2)} />}
+        {/* Stepper */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              {steps.map((label, i) => (
+                <div key={label} className="flex items-center gap-2">
+                  <button
+                    onClick={() => i < step && setStep(i)}
+                    disabled={i > step}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all ${
+                      i < step
+                        ? "bg-success text-success-foreground cursor-pointer"
+                        : i === step
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card-foreground/10 text-card-foreground/40"
+                    }`}
+                  >
+                    {i < step ? <Check className="h-4 w-4" /> : i + 1}
+                  </button>
+                  <span className={`hidden text-sm sm:inline ${
+                    i <= step ? "font-medium text-card-foreground" : "text-card-foreground/40"
+                  }`}>
+                    {label}
+                  </span>
+                  {i < steps.length - 1 && (
+                    <div className={`mx-2 h-px w-6 sm:w-12 ${i < step ? "bg-success" : "bg-card-foreground/10"}`} />
+                  )}
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Form steps */}
+        <Card>
+          <CardContent className="p-6 lg:p-8">
+            {step === 0 && <StepTalentInfo data={data} onChange={handleChange} onNext={() => setStep(1)} />}
+            {step === 1 && <StepJobDetails data={data} onChange={handleChange} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
+            {step === 2 && <StepPricing data={data} onChange={handleChange} onNext={() => setStep(3)} onBack={() => setStep(1)} />}
+            {step === 3 && (
+              <StepRecap
+                data={data}
+                onBack={() => setStep(2)}
+                onEdit={setStep}
+                draftId={draftId}
+                onSubmitted={(id) => { setSubmittedId(id); setSubmitted(true); }}
+              />
+            )}
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   );
