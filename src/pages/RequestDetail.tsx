@@ -48,7 +48,10 @@ const RequestDetail = () => {
     try {
       const { data, error } = await supabase.functions.invoke("generate-job-offer", { body: { requestId: id } });
       if (error) throw error;
-      const blob = new Blob([data?.content || "Erreur"], { type: "text/plain;charset=utf-8" });
+      // data is already parsed JSON from supabase.functions.invoke
+      const content = typeof data === "string" ? data : (data?.content || "Erreur lors de la génération");
+      if (data?.error) throw new Error(data.error);
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
