@@ -30,9 +30,10 @@ serve(async (req) => {
       });
     }
 
-    const { requestId } = await req.json();
-    if (!requestId) {
-      return new Response(JSON.stringify({ error: "requestId requis" }), {
+    const body = await req.json().catch(() => null);
+    const requestId = body?.requestId;
+    if (!requestId || typeof requestId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(requestId)) {
+      return new Response(JSON.stringify({ error: "requestId requis (UUID valide)" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -110,7 +111,7 @@ Détails du poste :
     });
   } catch (e) {
     console.error("Error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erreur interne" }), {
+    return new Response(JSON.stringify({ error: "Erreur interne" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
