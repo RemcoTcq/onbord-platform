@@ -14,6 +14,7 @@ import RequestDetail from "./pages/RequestDetail";
 import Requests from "./pages/Requests";
 import Drafts from "./pages/Drafts";
 import Admin from "./pages/Admin";
+import Account from "./pages/Account";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/request/:id" element={<ProtectedRoute><RequestDetail /></ProtectedRoute>} />
             <Route path="/requests" element={<ProtectedRoute><Requests /></ProtectedRoute>} />
             <Route path="/drafts" element={<ProtectedRoute><Drafts /></ProtectedRoute>} />
+            <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

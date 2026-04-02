@@ -1,8 +1,9 @@
-import { Home, Plus, FileText, Send, Shield, LogOut } from "lucide-react";
+import { Home, Plus, FileText, Send, Shield, LogOut, User } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import onbordLogo from "@/assets/onbord-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +21,7 @@ const menuItems = [
   { title: "Nouvelle demande", url: "/request/new", icon: Plus },
   { title: "Brouillons", url: "/drafts", icon: FileText },
   { title: "Demandes", url: "/requests", icon: Send },
+  { title: "Mon compte", url: "/account", icon: User },
 ];
 
 export function AppSidebar() {
@@ -42,12 +44,10 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r-0">
       <div className="flex h-16 items-center px-4">
         {!collapsed && (
-          <span className="text-xl font-bold text-sidebar-primary tracking-tight">
-            Onbord
-          </span>
+          <img src={onbordLogo} alt="Onbord" className="h-8 w-auto" />
         )}
         {collapsed && (
-          <span className="text-xl font-bold text-sidebar-primary">O</span>
+          <img src={onbordLogo} alt="Onbord" className="h-6 w-6 object-contain object-left" />
         )}
       </div>
 
