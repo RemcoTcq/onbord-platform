@@ -1,18 +1,20 @@
 export interface RequestFormData {
-  // Step 1
+  // Step 1 - Talent
   domain: string;
-  skills: string[];
-  softSkills: string[];
+  mustHaveSkills: string[];
+  niceToHaveSkills: string[];
+  mustHaveSoftSkills: string[];
+  niceToHaveSoftSkills: string[];
   customSkills: string[];
   languages: { name: string; level: number }[];
   diploma: string;
-  // Step 2
+  // Step 2 - Job
   title: string;
   description: string;
   talentsNumber: number;
   daysPerWeek: number;
   scheduleType: "flexible" | "fixed";
-  scheduleDetails: Record<string, string[]>; // day -> ["morning", "afternoon"]
+  scheduleDetails: Record<string, string[]>;
   workMode: string;
   // Computed
   weeklyHours: number;
@@ -22,8 +24,10 @@ export interface RequestFormData {
 
 export const defaultFormData: RequestFormData = {
   domain: "",
-  skills: [],
-  softSkills: [],
+  mustHaveSkills: [],
+  niceToHaveSkills: [],
+  mustHaveSoftSkills: [],
+  niceToHaveSoftSkills: [],
   customSkills: [],
   languages: [],
   diploma: "",
