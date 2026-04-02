@@ -1,8 +1,9 @@
-import { Home, Plus, FileText, Send, Shield, LogOut } from "lucide-react";
+import { Home, Plus, FileText, Send, Shield, LogOut, User } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import onbordLogo from "@/assets/onbord-logo.png";
 import {
   Sidebar,
   SidebarContent,
@@ -20,6 +21,7 @@ const menuItems = [
   { title: "Nouvelle demande", url: "/request/new", icon: Plus },
   { title: "Brouillons", url: "/drafts", icon: FileText },
   { title: "Demandes", url: "/requests", icon: Send },
+  { title: "Mon compte", url: "/account", icon: User },
 ];
 
 export function AppSidebar() {
