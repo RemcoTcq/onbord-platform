@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import onbordLogo from "@/assets/onbord-logo.png";
 
 const Signup = () => {
   const [firstName, setFirstName] = useState("");
@@ -65,8 +66,8 @@ const Signup = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-foreground">Onbord</h1>
+        <div className="text-center flex flex-col items-center">
+          <img src={onbordLogo} alt="Onbord" className="h-10 w-auto mb-2" />
           <p className="mt-2 text-muted-foreground">Créez votre compte entreprise</p>
         </div>
         <Card>

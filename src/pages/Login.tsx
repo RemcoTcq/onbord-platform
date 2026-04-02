@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import onbordLogo from "@/assets/onbord-logo.png";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,8 +52,8 @@ const Login = () => {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-foreground">Onbord</h1>
+        <div className="text-center flex flex-col items-center">
+          <img src={onbordLogo} alt="Onbord" className="h-10 w-auto mb-2" />
           <p className="mt-2 text-muted-foreground">Connectez-vous à votre espace</p>
         </div>
         <Card>
