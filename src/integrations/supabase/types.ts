@@ -16,34 +16,52 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          city: string
           company_name: string
           company_role: string
+          country: string
           created_at: string
           first_name: string
           id: string
           last_name: string
+          phone: string
+          postal_code: string
+          street_address: string
           updated_at: string
           user_id: string
+          vat_number: string
         }
         Insert: {
+          city?: string
           company_name?: string
           company_role?: string
+          country?: string
           created_at?: string
           first_name?: string
           id?: string
           last_name?: string
+          phone?: string
+          postal_code?: string
+          street_address?: string
           updated_at?: string
           user_id: string
+          vat_number?: string
         }
         Update: {
+          city?: string
           company_name?: string
           company_role?: string
+          country?: string
           created_at?: string
           first_name?: string
           id?: string
           last_name?: string
+          phone?: string
+          postal_code?: string
+          street_address?: string
           updated_at?: string
           user_id?: string
+          vat_number?: string
         }
         Relationships: []
       }
