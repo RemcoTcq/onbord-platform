@@ -111,7 +111,7 @@ Détails du poste :
     });
   } catch (e) {
     console.error("Error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erreur interne" }), {
+    return new Response(JSON.stringify({ error: "Erreur interne" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
