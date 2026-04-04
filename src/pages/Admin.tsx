@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, Trash2, Building2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -30,18 +30,27 @@ interface AdminRequest {
   weekly_price: number;
   monthly_price: number;
   talents_number: number;
+  user_id: string;
+}
+
+interface ProfileMap {
+  [userId: string]: { first_name: string; last_name: string; company_name: string; email?: string };
 }
 
 const Admin = () => {
   const [requests, setRequests] = useState<AdminRequest[]>([]);
+  const [profiles, setProfiles] = useState<ProfileMap>({});
   const [loading, setLoading] = useState(true);
 
   const fetchAll = async () => {
-    const { data } = await supabase
-      .from("requests")
-      .select("id, title, domain, status, created_at, weekly_price, monthly_price, talents_number")
-      .order("created_at", { ascending: false });
-    setRequests(data || []);
+    const [reqRes, profRes] = await Promise.all([
+      supabase.from("requests").select("id, title, domain, status, created_at, weekly_price, monthly_price, talents_number, user_id").order("created_at", { ascending: false }),
+      supabase.from("profiles").select("user_id, first_name, last_name, company_name"),
+    ]);
+    setRequests(reqRes.data || []);
+    const map: ProfileMap = {};
+    (profRes.data || []).forEach((p) => { map[p.user_id] = p; });
+    setProfiles(map);
     setLoading(false);
   };
 
@@ -67,6 +76,14 @@ const Admin = () => {
     }
   };
 
+  const getProfileLabel = (userId: string) => {
+    const p = profiles[userId];
+    if (!p) return userId.slice(0, 8) + "…";
+    const name = [p.first_name, p.last_name].filter(Boolean).join(" ");
+    if (p.company_name && name) return `${p.company_name} — ${name}`;
+    return p.company_name || name || userId.slice(0, 8) + "…";
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -88,6 +105,10 @@ const Admin = () => {
                     <div>
                       <CardTitle className="text-lg">{req.title}</CardTitle>
                       <p className="text-sm text-muted-foreground">{req.domain} · {req.talents_number} talent(s)</p>
+                      <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                        <Building2 className="h-3 w-3" />
+                        <span>{getProfileLabel(req.user_id)}</span>
+                      </div>
                     </div>
                     <Select value={req.status} onValueChange={(v) => updateStatus(req.id, v)}>
                       <SelectTrigger className="w-52">

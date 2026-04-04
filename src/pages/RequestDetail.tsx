@@ -7,7 +7,7 @@ import { STATUSES } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Clock, FileDown, Loader2, Trash2 } from "lucide-react";
+import { Check, Clock, FileDown, Loader2, Trash2, Pencil, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { AdminRequestEditForm } from "@/components/admin/AdminRequestEditForm";
 
 const RequestDetail = () => {
   const { id } = useParams();
@@ -29,6 +30,8 @@ const RequestDetail = () => {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [ownerProfile, setOwnerProfile] = useState<{ first_name: string; last_name: string; company_name: string } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -40,6 +43,11 @@ const RequestDetail = () => {
     supabase.from("requests").select("*").eq("id", id).single().then(({ data }) => {
       setRequest(data);
       setLoading(false);
+      if (data?.user_id) {
+        supabase.from("profiles").select("first_name, last_name, company_name").eq("user_id", data.user_id).single().then(({ data: p }) => {
+          if (p) setOwnerProfile(p);
+        });
+      }
     });
   }, [id]);
 
@@ -48,7 +56,6 @@ const RequestDetail = () => {
     try {
       const { data, error } = await supabase.functions.invoke("generate-job-offer", { body: { requestId: id } });
       if (error) throw error;
-      // data is already parsed JSON from supabase.functions.invoke
       const content = typeof data === "string" ? data : (data?.content || "Erreur lors de la génération");
       if (data?.error) throw new Error(data.error);
       const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -94,10 +101,30 @@ const RequestDetail = () => {
     return <AppLayout><p className="text-center text-muted-foreground">Demande introuvable</p></AppLayout>;
   }
 
+  // Edit mode for admin
+  if (editing && isAdmin) {
+    return (
+      <AppLayout>
+        <div className="mx-auto max-w-4xl">
+          <h1 className="text-2xl font-bold text-foreground mb-6">Modifier la demande</h1>
+          <AdminRequestEditForm
+            request={request}
+            onSave={(updated) => { setRequest(updated); setEditing(false); }}
+            onCancel={() => setEditing(false)}
+          />
+        </div>
+      </AppLayout>
+    );
+  }
+
   const currentIdx = STATUSES.indexOf(request.status as any);
   const languages = (request.languages || []) as { name: string; level: number }[];
-  const niceToHaveSkills = (request as any).nice_to_have_skills || [];
-  const niceToHaveSoftSkills = (request as any).nice_to_have_soft_skills || [];
+  const niceToHaveSkills = request.nice_to_have_skills || [];
+  const niceToHaveSoftSkills = request.nice_to_have_soft_skills || [];
+
+  const ownerLabel = ownerProfile
+    ? [ownerProfile.company_name, [ownerProfile.first_name, ownerProfile.last_name].filter(Boolean).join(" ")].filter(Boolean).join(" — ")
+    : null;
 
   return (
     <AppLayout>
@@ -107,8 +134,19 @@ const RequestDetail = () => {
           <div>
             <h1 className="text-2xl font-bold text-foreground">{request.title}</h1>
             <p className="text-muted-foreground">{request.domain}</p>
+            {ownerLabel && (
+              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+                <Building2 className="h-4 w-4" />
+                <span>{ownerLabel}</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
+            {isAdmin && (
+              <Button onClick={() => setEditing(true)} variant="outline" className="gap-2">
+                <Pencil className="h-4 w-4" /> Modifier
+              </Button>
+            )}
             <Button onClick={handleGenerateOffer} disabled={generating} className="gap-2 bg-card text-card-foreground hover:bg-card/90">
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileDown className="h-4 w-4" />}
               {generating ? "Génération..." : "Télécharger l'offre"}
@@ -143,35 +181,28 @@ const RequestDetail = () => {
         <Card>
           <CardContent className="p-6">
             <h3 className="text-lg font-semibold text-card-foreground mb-4">Progression</h3>
-            {(() => {
-              const count = STATUSES.length;
-              const halfStep = `${50 / count}%`;
-              const progressWidth = currentIdx > 0 ? `${(currentIdx / (count - 1)) * (100 - 100 / count)}%` : '0%';
-              return (
-                <div className="relative flex items-start justify-between">
-                  <div className="absolute top-5 h-0.5 bg-card-foreground/10" style={{ left: halfStep, right: halfStep }} />
-                  {currentIdx > 0 && (
-                    <div className="absolute top-5 h-0.5 bg-success" style={{ left: halfStep, width: progressWidth }} />
-                  )}
-                  {STATUSES.map((status, i) => (
-                    <div key={status} className="flex flex-col items-center flex-1">
-                      <div className={`flex h-10 w-10 items-center justify-center rounded-full z-10 transition-all ${
-                        i <= currentIdx
-                          ? "bg-success text-success-foreground shadow-lg shadow-success/20"
-                          : "bg-card-foreground/10 text-card-foreground/30"
-                      }`}>
-                        {i <= currentIdx ? <Check className="h-5 w-5" /> : <Clock className="h-4 w-4" />}
-                      </div>
-                      <span className={`mt-2 text-xs text-center max-w-[100px] ${
-                        i <= currentIdx ? "font-medium text-card-foreground" : "text-card-foreground/40"
-                      }`}>
-                        {status}
-                      </span>
-                    </div>
-                  ))}
+            <div className="relative flex items-start justify-between">
+              <div className="absolute top-5 left-[10%] right-[10%] h-0.5 bg-card-foreground/10" />
+              {currentIdx > 0 && (
+                <div className="absolute top-5 h-0.5 bg-success" style={{ left: "10%", width: `${(currentIdx / (STATUSES.length - 1)) * 80}%` }} />
+              )}
+              {STATUSES.map((status, i) => (
+                <div key={status} className="flex flex-col items-center flex-1">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-full z-10 transition-all ${
+                    i <= currentIdx
+                      ? "bg-success text-success-foreground shadow-lg shadow-success/20"
+                      : "bg-card-foreground/10 text-card-foreground/30"
+                  }`}>
+                    {i <= currentIdx ? <Check className="h-5 w-5" /> : <Clock className="h-4 w-4" />}
+                  </div>
+                  <span className={`mt-2 text-xs text-center max-w-[100px] ${
+                    i <= currentIdx ? "font-medium text-card-foreground" : "text-card-foreground/40"
+                  }`}>
+                    {status}
+                  </span>
                 </div>
-              );
-            })()}
+              ))}
+            </div>
           </CardContent>
         </Card>
 
@@ -234,7 +265,7 @@ const RequestDetail = () => {
             )}
             {(request.soft_skills || []).length > 0 && (
               <div>
-                <p className="mb-1 text-xs font-semibold text-card-foreground/50 uppercase">Soft Skills</p>
+                <p className="mb-1 text-xs font-semibold text-card-foreground/50 uppercase">Soft Skills — Must have</p>
                 <div className="flex flex-wrap gap-1">{(request.soft_skills || []).map((s: string) => <Badge key={s} variant="secondary">{s}</Badge>)}</div>
               </div>
             )}
