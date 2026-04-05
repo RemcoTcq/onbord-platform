@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/contexts/ProfileContext";
 import { Button } from "@/components/ui/button";
 import onbordLogo from "@/assets/onbord-logo.png";
+import onbordIcon from "@/assets/onbord-icon.png";
 import {
   Sidebar,
   SidebarContent,
