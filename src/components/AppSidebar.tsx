@@ -1,4 +1,5 @@
 import { Home, Plus, FileText, Send, Shield, LogOut, User, Settings } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { NavLink } from "@/components/NavLink";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
