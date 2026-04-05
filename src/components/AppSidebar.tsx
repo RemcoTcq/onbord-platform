@@ -90,12 +90,15 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-3">
+      <SidebarFooter className="p-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 w-full rounded-lg px-2 py-2 hover:bg-sidebar-accent transition-colors text-left">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-semibold">
-                {initials || <User className="h-4 w-4" />}
+            <button className={cn(
+              "flex items-center gap-3 w-full rounded-lg py-2 hover:bg-sidebar-accent transition-colors text-left overflow-hidden",
+              collapsed ? "justify-center px-0" : "px-2"
+            )}>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+                {initials || <User className="h-3.5 w-3.5" />}
               </div>
               {!collapsed && (
                 <div className="flex-1 min-w-0">
