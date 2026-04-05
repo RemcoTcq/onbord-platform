@@ -58,12 +58,11 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="border-r-0">
-      <div className="flex h-16 items-center px-4">
-        {!collapsed && (
+      <div className="flex h-16 items-center justify-center px-4">
+        {!collapsed ? (
           <img src={onbordLogo} alt="Onbord" className="h-8 w-auto" />
-        )}
-        {collapsed && (
-          <img src={onbordLogo} alt="Onbord" className="h-6 w-6 object-contain object-left" />
+        ) : (
+          <img src={onbordIcon} alt="Onbord" className="h-8 w-8 object-contain" />
         )}
       </div>
 
