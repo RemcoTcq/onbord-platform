@@ -54,9 +54,6 @@ const NewRequest = () => {
           scheduleDetails: (row.schedule_details as any) || {},
           workMode: row.work_mode || "remote",
           employmentType: ((row as any).employment_type as any) || null,
-          weeklyHours: Number(row.weekly_hours),
-          weeklyPrice: Number(row.weekly_price),
-          monthlyPrice: Number(row.monthly_price),
         });
         // Skip the AI step when editing an existing draft
         setStep(1);
@@ -88,9 +85,9 @@ const NewRequest = () => {
       schedule_type: data.scheduleType,
       schedule_details: data.scheduleDetails as any,
       work_mode: data.workMode,
-      weekly_hours: data.weeklyHours,
-      weekly_price: data.weeklyPrice,
-      monthly_price: data.monthlyPrice,
+      weekly_hours: 0,
+      weekly_price: 0,
+      monthly_price: 0,
       status: "draft",
       natural_language_query: data.naturalLanguageQuery || null,
       employment_type: data.employmentType || null,

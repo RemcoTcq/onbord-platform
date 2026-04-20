@@ -24,10 +24,6 @@ export interface RequestFormData {
   workMode: string;
   // Graduate-only
   employmentType: EmploymentType;
-  // Computed
-  weeklyHours: number;
-  weeklyPrice: number;
-  monthlyPrice: number;
 }
 
 export const defaultFormData: RequestFormData = {
@@ -49,7 +45,4 @@ export const defaultFormData: RequestFormData = {
   scheduleDetails: {},
   workMode: "remote",
   employmentType: null,
-  weeklyHours: 0,
-  weeklyPrice: 0,
-  monthlyPrice: 0,
 };
