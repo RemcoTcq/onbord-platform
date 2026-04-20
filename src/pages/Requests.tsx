@@ -40,7 +40,7 @@ const Requests = () => {
     const load = async () => {
       const { data } = await supabase
         .from("requests")
-        .select("id, title, domain, status, created_at")
+        .select("id, title, domain, status, created_at, talent_type")
         .eq("user_id", user.id)
         .neq("status", "draft")
         .order("created_at", { ascending: false });
