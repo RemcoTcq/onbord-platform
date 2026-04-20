@@ -114,8 +114,12 @@ const Requests = () => {
                       <h3 className="font-semibold text-card-foreground truncate">{req.title}</h3>
                       <Badge className={statusColor(req.status)}>{req.status}</Badge>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-card-foreground/50">
+                    <div className="flex items-center gap-2 text-xs text-card-foreground/50 flex-wrap">
                       <span>{req.domain}</span>
+                      <span>•</span>
+                      <Badge variant="outline" className="text-xs font-normal border-card-foreground/20 text-card-foreground/70">
+                        {req.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"}
+                      </Badge>
                       <span>•</span>
                       <span>{new Date(req.created_at).toLocaleDateString("fr-FR")}</span>
                     </div>
