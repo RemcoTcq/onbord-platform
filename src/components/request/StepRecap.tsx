@@ -101,14 +101,6 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
 
       <Section title="Profil recherché" stepIdx={0}>
         <div className="space-y-3">
-          <div className="rounded-md border border-border bg-muted/30 p-3">
-            <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Talent demandé</p>
-            <TalentTypeBadge talentType={data.talentType} large />
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-card-foreground/60">Type de talent</span>
-            <span className="text-card-foreground font-medium">{getTalentTypeLabel(data.talentType)}</span>
-          </div>
           <div className="flex justify-between text-sm">
             <span className="text-card-foreground/60">Domaine</span>
             <span className="text-card-foreground font-medium">{data.domain}</span>
