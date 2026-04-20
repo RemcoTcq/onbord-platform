@@ -133,7 +133,12 @@ const RequestDetail = () => {
         <div className="flex items-start justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">{request.title}</h1>
-            <p className="text-muted-foreground">{request.domain}</p>
+            <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <p className="text-muted-foreground">{request.domain}</p>
+              <Badge variant="secondary">
+                {request.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"}
+              </Badge>
+            </div>
             {ownerLabel && (
               <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                 <Building2 className="h-4 w-4" />
