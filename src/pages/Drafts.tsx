@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { FileText, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
@@ -13,6 +14,7 @@ interface Draft {
   title: string;
   created_at: string;
   domain: string;
+  talent_type: string;
 }
 
 const Drafts = () => {
