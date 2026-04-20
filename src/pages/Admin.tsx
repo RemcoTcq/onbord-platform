@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { AppLayout } from "@/components/AppLayout";
 import { STATUSES } from "@/lib/constants";
+import { TalentTypeBadge } from "@/components/TalentTypeBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Eye, Trash2, Building2, Mail } from "lucide-react";
@@ -107,9 +107,9 @@ const Admin = () => {
                       <CardTitle className="text-lg">{req.title}</CardTitle>
                       <div className="flex items-center gap-2 mt-1 flex-wrap">
                         <p className="text-sm text-muted-foreground">{req.domain} · {req.talents_number} talent(s)</p>
-                        <Badge variant="secondary" className="text-xs">
-                          {req.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"}
-                        </Badge>
+                      </div>
+                      <div className="mt-2">
+                        <TalentTypeBadge talentType={req.talent_type} />
                       </div>
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                         <Building2 className="h-3 w-3" />
