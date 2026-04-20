@@ -1,57 +1,83 @@
 
 
-## Constat
+## Plan : Refonte du formulaire de demande
 
-Sur la page actuelle `/request/185de58a-...`, la donnée renvoyée par le backend contient bien `talent_type: "student"` (vu dans les requêtes réseau). Le code de `RequestDetail.tsx` affiche déjà :
-- un badge "Étudiant / Jeune diplômé" à côté du domaine en haut
-- une ligne "Type de talent" dans le bloc "Détails du poste"
+### Step 1 — Recherche en langage naturel (nouveau)
 
-Mais visiblement, sur ta page actuelle, ces éléments ne sont pas assez visibles ou pas assez clairs. De plus, dans les requêtes réseau récentes, les payloads d'auto-save de brouillon **n'incluent pas encore `talent_type`** (le champ est absent du body POST/PATCH), ce qui veut dire que la dernière version du code n'a pas été correctement appliquée au runtime ou que la sélection "Jeune diplômé" n'est jamais persistée.
+Le Step 1 ne contient plus tout le profil. Il devient une page très simple :
 
-## Ce que je vais faire
+- Un grand `Textarea` avec le placeholder demandé : *"Décrivez le talent que vous recherchez... (ex: développeur JavaScript junior 3 jours par semaine)"*
+- Un bouton **"Générer le profil"** à droite/dessous
+- Au clic : appel d'une edge function backend qui interroge l'IA et renvoie un JSON structuré
+- Les champs reconnus (`domain`, `hardSkills`, `softSkills`, `talentType`, `diplome`) sont **pré-remplis** dans le state du formulaire
+- Une fois la génération terminée → on passe automatiquement au Step 2 (déjà pré-rempli, l'utilisateur peut affiner)
+- L'utilisateur peut aussi sauter cette étape et aller direct au Step 2 manuellement
 
-### 1. Rendre le type de talent ultra-visible sur la page détail
+**Note technique IA** : la consigne mentionne Anthropic Claude. Lovable utilise par défaut **Lovable AI** (gateway intégré, sans clé API à fournir, gratuit pendant la période d'inclusion). J'utiliserai `google/gemini-3-flash-preview` qui est rapide, gratuit et parfaitement adapté à de l'extraction structurée. Le system prompt fourni sera utilisé tel quel, et l'extraction se fera via tool calling pour garantir un JSON propre.
 
-Dans `src/pages/RequestDetail.tsx`, retravailler la zone d'en-tête pour que le type de talent soit impossible à manquer :
-- Mettre un **gros badge coloré et contrasté** juste sous le titre (pas une petite étiquette grise à côté du domaine)
-- Ajouter une **carte dédiée "Type de talent"** en haut, avec une icône et le label en grand : "Étudiant" ou "Jeune diplômé"
-- Garder aussi la ligne dans le bloc "Détails du poste"
+### Step 2 — Tous les autres champs (Profil + Détails fusionnés)
 
-### 2. Garantir que la donnée est bien envoyée au backend
+Le Step 2 regroupe maintenant ce qui était avant éclaté entre Step Talent et Step Détails :
 
-Vérifier et corriger si besoin :
-- `src/pages/NewRequest.tsx` : confirmer que l'auto-save de brouillon envoie bien `talent_type` dans **chaque** PATCH et POST
-- `src/components/request/StepRecap.tsx` : confirmer que l'envoi final envoie bien `talent_type`
-- Forcer une valeur par défaut explicite côté front pour éviter tout `undefined` qui serait filtré par Supabase
+**Bloc "Profil recherché"** (vient du Step Talent actuel)
+- Type de talent (Étudiant / Jeune diplômé)
+- Domaine, Hard skills, Soft skills, Langues, Diplôme
 
-### 3. Rendre visible aussi sur les autres pages
+**Bloc "Détails du poste"** (vient du Step Détails actuel)
+- Titre, description, nombre de talents, mode de travail
+- **Planning conditionnel selon le type de talent :**
 
-- `src/pages/Drafts.tsx` : badge sur chaque carte brouillon
-- `src/pages/Requests.tsx` : badge sur chaque carte de demande envoyée
-- `src/pages/Admin.tsx` : badge dans la liste admin
+#### Si "Étudiant" :
+- Comportement actuel conservé : sélecteur "jours par semaine" + horaires flexibles ou fixes (matin/après-midi par jour)
 
-### 4. Sécuriser l'affichage pour les anciennes demandes
+#### Si "Jeune diplômé" :
+- Nouveau choix : **"Temps plein"** ou **"Temps partiel"**
+- Si **Temps plein** → 5 jours/sem automatiquement, pas de sélecteur d'horaires
+- Si **Temps partiel** → sélecteur de nombre de jours, **minimum 3 jours**, maximum 4
 
-Fallback robuste : si `talent_type` est absent ou null, on affiche "Étudiant" (valeur par défaut historique).
+### Conséquences sur les autres steps
 
-## Vérification de bout en bout
+- Les anciens steps deviennent : **1. IA · 2. Formulaire · 3. Tarif · 4. Récap** (toujours 4 cartes dans le stepper)
+- `StepPricing` et `StepRecap` continuent de fonctionner — la logique pricing tient compte du temps plein (40h × nb talents) pour les jeunes diplômés
+- Le récap affiche "Temps plein" / "Temps partiel (X jours)" pour les jeunes diplômés au lieu de "Flexibles / Fixes"
 
-Après les changements, je vais :
-1. recharger la page actuelle `/request/185de58a-...` et vérifier que le badge "Étudiant" est bien gros et visible en haut
-2. créer une nouvelle demande en sélectionnant "Jeune diplômé"
-3. inspecter la requête réseau POST/PATCH pour confirmer que `talent_type: "graduate"` est bien dans le body
-4. ouvrir le brouillon dans Brouillons → vérifier le badge
-5. envoyer la demande → vérifier dans Mes demandes
-6. ouvrir le détail → vérifier le gros badge et la ligne "Type de talent"
+### Modifications de données
 
-## Fichiers concernés
+Ajout dans `RequestFormData` (et persistance Supabase) :
+- `naturalLanguageQuery: string` — la phrase saisie au Step 1 (pour traçabilité)
+- `employmentType: "full_time" | "part_time" | null` — utilisé uniquement pour les jeunes diplômés
 
-- `src/pages/RequestDetail.tsx` (visibilité forte)
-- `src/pages/NewRequest.tsx` (persistance)
-- `src/components/request/StepRecap.tsx` (persistance)
-- `src/pages/Drafts.tsx`, `src/pages/Requests.tsx`, `src/pages/Admin.tsx` (badges listes)
+Ces deux champs vont dans la table `requests` via une migration (colonnes `natural_language_query text`, `employment_type text`).
 
-## Détails techniques
+### Code supprimé / nettoyé
 
-Le composant Badge `secondary` actuel sur fond clair peut être peu visible selon le thème. Je vais utiliser une variante plus marquée (couleur primaire ou accent + icône `GraduationCap`) pour le badge principal, et placer en plus une carte "Type de talent" juste après le titre afin que ce soit la première information vue par l'admin et l'utilisateur.
+- Suppression du composant `StepJobDetails.tsx` (fusionné dans Step 2)
+- Suppression dans `StepTalentInfo` du bouton "Suivant" autonome → remplacé par le nouveau Step 2 unifié `StepProfileAndJob.tsx`
+- Suppression des imports / props devenus inutiles
+- Mise à jour de `NewRequest.tsx` : nouveau tableau `steps = ["Recherche IA", "Formulaire", "Tarif", "Récap"]` et nouveau routage des composants
+
+### Edge function `generate-talent-profile`
+
+Nouveau fichier `supabase/functions/generate-talent-profile/index.ts` :
+- Reçoit `{ description: string }` du frontend
+- Appelle Lovable AI Gateway avec le system prompt **exact** demandé par l'utilisateur
+- Utilise tool calling (`extract_profile`) pour forcer un JSON propre
+- Mappe le résultat vers les valeurs internes : `Étudiant` → `student`, `Jeune diplômé` → `graduate`, et matche le `domain` retourné contre la liste `DOMAINS` (fallback sur match approximatif insensible à la casse)
+- Gère les erreurs 429 (rate limit) et 402 (crédits) avec un toast côté frontend
+- `verify_jwt = false` n'est pas nécessaire (utilisateur déjà connecté)
+
+### Fichiers concernés
+
+- **Créés** : `src/components/request/StepNaturalLanguage.tsx`, `src/components/request/StepProfileAndJob.tsx`, `supabase/functions/generate-talent-profile/index.ts`, migration SQL
+- **Modifiés** : `src/pages/NewRequest.tsx`, `src/lib/request-types.ts`, `src/components/request/StepRecap.tsx`, `src/components/request/StepPricing.tsx` (logique heures pour temps plein)
+- **Supprimés** : `src/components/request/StepJobDetails.tsx`, `src/components/request/StepTalentInfo.tsx` (remplacé par StepProfileAndJob)
+
+### Vérification de bout en bout
+
+1. Aller sur "Nouvelle demande"
+2. Taper *"développeur React junior 3 jours par semaine"* → cliquer Générer le profil
+3. Vérifier que le Step 2 est pré-rempli (domaine IT & Software, React, talent type Étudiant)
+4. Affiner si besoin, passer au tarif puis au récap, envoyer
+5. Recommencer en sélectionnant "Jeune diplômé" → vérifier que le Step 2 propose Temps plein / Temps partiel (min 3 jours)
+6. Vérifier le rendu sur mobile
 
