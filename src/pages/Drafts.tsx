@@ -26,7 +26,7 @@ const Drafts = () => {
     if (!user) return;
     const { data } = await supabase
       .from("requests")
-      .select("id, title, created_at, domain")
+      .select("id, title, created_at, domain, talent_type")
       .eq("user_id", user.id)
       .eq("status", "draft")
       .order("created_at", { ascending: false });
