@@ -31,6 +31,7 @@ interface AdminRequest {
   monthly_price: number;
   talents_number: number;
   user_id: string;
+  talent_type: string;
 }
 
 interface ProfileMap {
