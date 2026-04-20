@@ -46,8 +46,12 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
         talentType: result.talentType === "graduate" ? "graduate" : "student",
       };
       if (result.domain) update.domain = result.domain;
-      if (Array.isArray(result.hardSkills) && result.hardSkills.length > 0) {
-        update.mustHaveSkills = result.hardSkills;
+
+      const matched = Array.isArray(result.hardSkills) ? result.hardSkills : [];
+      const custom = Array.isArray(result.customHardSkills) ? result.customHardSkills : [];
+      const merged = Array.from(new Set([...matched, ...custom]));
+      if (merged.length > 0) {
+        update.mustHaveSkills = merged;
         update.niceToHaveSkills = [];
       }
       if (Array.isArray(result.softSkills) && result.softSkills.length > 0) {
