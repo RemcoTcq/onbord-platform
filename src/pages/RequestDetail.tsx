@@ -220,23 +220,11 @@ const RequestDetail = () => {
         </Card>
 
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card>
-            <CardContent className="p-6 space-y-3">
-              <h3 className="text-lg font-semibold text-card-foreground">Type de talent</h3>
-              <TalentTypeBadge talentType={request.talent_type} large />
-              <p className="text-sm text-muted-foreground">Cette demande concerne un profil {getTalentTypeLabel(request.talent_type).toLowerCase()}.</p>
-            </CardContent>
-          </Card>
-
           {/* Job details */}
           <Card>
             <CardContent className="p-6 space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h3 className="text-lg font-semibold text-card-foreground">Détails du poste</h3>
-                <TalentTypeBadge talentType={request.talent_type} />
-              </div>
+              <h3 className="text-lg font-semibold text-card-foreground">Détails du poste</h3>
               {[
-                ["Type de talent", (request.talent_type || "student") === "graduate" ? "Jeune diplômé" : "Étudiant"],
                 ["Description", request.description],
                 ["Talents", request.talents_number],
                 ["Jours/semaine", request.days_per_week],
