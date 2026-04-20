@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import { STATUSES } from "@/lib/constants";
+import { TalentTypeBadge } from "@/components/TalentTypeBadge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Clock, FileDown, Loader2, Trash2, Pencil, Building2, GraduationCap, UserCheck } from "lucide-react";
+import { Check, Clock, FileDown, Loader2, Trash2, Pencil, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -21,6 +22,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { AdminRequestEditForm } from "@/components/admin/AdminRequestEditForm";
+import { getTalentTypeLabel } from "@/lib/talent-type";
 
 const RequestDetail = () => {
   const { id } = useParams();
@@ -136,16 +138,7 @@ const RequestDetail = () => {
               <h1 className="text-2xl font-bold text-foreground">{request.title}</h1>
               <p className="text-muted-foreground mt-1">{request.domain}</p>
             </div>
-            <div className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-primary-foreground shadow-sm">
-              {(request.talent_type || "student") === "graduate" ? (
-                <UserCheck className="h-4 w-4" />
-              ) : (
-                <GraduationCap className="h-4 w-4" />
-              )}
-              <span className="text-sm font-semibold">
-                {(request.talent_type || "student") === "graduate" ? "Jeune diplômé" : "Étudiant"}
-              </span>
-            </div>
+            <TalentTypeBadge talentType={request.talent_type} large showHint className="shadow-sm" />
             {ownerLabel && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Building2 className="h-4 w-4" />
@@ -219,6 +212,14 @@ const RequestDetail = () => {
         </Card>
 
         <div className="grid gap-4 lg:grid-cols-2">
+          <Card>
+            <CardContent className="p-6 space-y-3">
+              <h3 className="text-lg font-semibold text-card-foreground">Type de talent</h3>
+              <TalentTypeBadge talentType={request.talent_type} large />
+              <p className="text-sm text-muted-foreground">Cette demande concerne un profil {getTalentTypeLabel(request.talent_type).toLowerCase()}.</p>
+            </CardContent>
+          </Card>
+
           {/* Job details */}
           <Card>
             <CardContent className="p-6 space-y-3">

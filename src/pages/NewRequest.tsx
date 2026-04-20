@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import { RequestFormData, defaultFormData } from "@/lib/request-types";
+import { normalizeTalentType } from "@/lib/talent-type";
 import { StepTalentInfo } from "@/components/request/StepTalentInfo";
 import { StepJobDetails } from "@/components/request/StepJobDetails";
 import { StepPricing } from "@/components/request/StepPricing";
@@ -35,7 +36,7 @@ const NewRequest = () => {
       if (row) {
         setDraftId(id);
         setData({
-          talentType: ((row as any).talent_type as "student" | "graduate") || "student",
+          talentType: normalizeTalentType((row as any).talent_type),
           domain: row.domain || "",
           mustHaveSkills: row.skills || [],
           niceToHaveSkills: (row as any).nice_to_have_skills || [],
@@ -71,7 +72,7 @@ const NewRequest = () => {
       title: data.title || "Sans titre",
       description: data.description,
       domain: data.domain || "Non défini",
-      talent_type: data.talentType,
+      talent_type: normalizeTalentType(data.talentType),
       skills: data.mustHaveSkills,
       nice_to_have_skills: data.niceToHaveSkills,
       soft_skills: data.mustHaveSoftSkills,

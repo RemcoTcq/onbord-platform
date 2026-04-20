@@ -3,9 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { RequestFormData } from "@/lib/request-types";
 import { HOURLY_RATE } from "@/lib/constants";
+import { TalentTypeBadge } from "@/components/TalentTypeBadge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { getTalentTypeLabel, normalizeTalentType } from "@/lib/talent-type";
 import { toast } from "sonner";
 import { ArrowLeft, Send, Pencil, Loader2 } from "lucide-react";
 
@@ -37,7 +39,7 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
       title: data.title,
       description: data.description,
       domain: data.domain,
-      talent_type: data.talentType,
+      talent_type: normalizeTalentType(data.talentType),
       skills: data.mustHaveSkills,
       nice_to_have_skills: data.niceToHaveSkills,
       soft_skills: data.mustHaveSoftSkills,
@@ -89,11 +91,19 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
         <p className="text-sm text-card-foreground/60">Vérifiez les informations avant d'envoyer</p>
       </div>
 
+      <div className="rounded-lg border border-border bg-muted/40 p-4">
+        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Type de profil recherché</p>
+        <div className="flex flex-wrap items-center gap-3">
+          <TalentTypeBadge talentType={data.talentType} large showHint />
+          <span className="text-sm text-card-foreground/70">{getTalentTypeLabel(data.talentType)} sélectionné pour cette demande</span>
+        </div>
+      </div>
+
       <Section title="Profil recherché" stepIdx={0}>
         <div className="space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-card-foreground/60">Type de talent</span>
-            <span className="text-card-foreground font-medium">{data.talentType === "graduate" ? "Jeune diplômé" : "Étudiant"}</span>
+            <span className="text-card-foreground font-medium">{getTalentTypeLabel(data.talentType)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-card-foreground/60">Domaine</span>

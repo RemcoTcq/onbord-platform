@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { TalentTypeBadge } from "@/components/TalentTypeBadge";
 import { FileText, Trash2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 
@@ -77,12 +77,11 @@ const Drafts = () => {
                     <h3 className="font-semibold text-card-foreground truncate">
                       {draft.title || "Sans titre"}
                     </h3>
+                    <div className="mt-2">
+                      <TalentTypeBadge talentType={draft.talent_type} />
+                    </div>
                     <div className="flex items-center gap-2 text-xs text-card-foreground/50 mt-1 flex-wrap">
                       {draft.domain && <span>{draft.domain}</span>}
-                      <span>•</span>
-                      <Badge variant="outline" className="text-xs font-normal border-card-foreground/20 text-card-foreground/70">
-                        {draft.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"}
-                      </Badge>
                       <span>•</span>
                       <span>{new Date(draft.created_at).toLocaleDateString("fr-FR")}</span>
                     </div>
