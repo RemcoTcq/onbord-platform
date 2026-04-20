@@ -15,6 +15,7 @@ interface Request {
   domain: string;
   status: string;
   created_at: string;
+  talent_type: string;
 }
 
 const statusColor = (status: string) => {
