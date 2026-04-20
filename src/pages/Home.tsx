@@ -49,36 +49,41 @@ const Home = () => {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-5xl space-y-12">
+      <div className="mx-auto max-w-5xl space-y-6">
         {/* Hero */}
-        <div className="rounded-2xl bg-gradient-to-br from-accent to-secondary p-8 lg:p-12">
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground lg:text-4xl">
-            Recrutez les talents de demain,<br />dès aujourd'hui
-          </h1>
-          <p className="mt-4 max-w-xl text-muted-foreground text-lg">
-            Onbord vous connecte aux meilleurs profils pour vos missions, en quelques clics.
-          </p>
-          <Link to="/request/new">
-            <Button size="lg" className="mt-6 gap-2 bg-card text-card-foreground hover:bg-card/90 font-semibold">
-              Créer une demande
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-        </div>
+        <Card className="overflow-hidden">
+          <CardContent className="p-8 lg:p-10">
+            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Rocket className="h-5 w-5" />
+            </div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
+              Recrutez les talents de demain,<br />dès aujourd'hui
+            </h1>
+            <p className="mt-3 max-w-xl text-muted-foreground text-[15px]">
+              Onbord vous connecte aux meilleurs profils pour vos missions, en quelques clics.
+            </p>
+            <Link to="/request/new">
+              <Button size="lg" className="mt-6 gap-2">
+                Créer une demande
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
 
         {/* 3 Steps */}
         <div>
-          <h2 className="text-xl font-bold text-foreground mb-6">Comment ça marche</h2>
+          <h2 className="section-title mb-4">Comment ça marche</h2>
           <div className="grid gap-4 sm:grid-cols-3">
             {steps.map((step, i) => (
               <Card key={i} className="card-hover">
-                <CardContent className="p-6">
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-                    <step.icon className="h-5 w-5 text-primary" />
+                <CardContent className="p-5">
+                  <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                    <step.icon className="h-4 w-4 text-foreground" />
                   </div>
-                  <div className="text-xs font-semibold text-primary/60 mb-1">Étape {i + 1}</div>
-                  <h3 className="font-semibold text-card-foreground">{step.title}</h3>
-                  <p className="mt-2 text-sm text-card-foreground/60">{step.desc}</p>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Étape {i + 1}</div>
+                  <h3 className="font-semibold text-card-foreground text-[15px]">{step.title}</h3>
+                  <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed">{step.desc}</p>
                 </CardContent>
               </Card>
             ))}
@@ -88,49 +93,49 @@ const Home = () => {
         {/* Video placeholder */}
         <Card className="overflow-hidden">
           <CardContent className="p-0">
-            <div className="flex items-center justify-center bg-card-foreground/5 h-64 lg:h-80">
+            <div className="flex items-center justify-center bg-muted/40 h-64 lg:h-72">
               <div className="text-center">
-                <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                  <Rocket className="h-8 w-8 text-primary" />
+                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
+                  <Rocket className="h-6 w-6 text-muted-foreground" />
                 </div>
-                <p className="text-sm font-medium text-card-foreground/40">Vidéo de présentation</p>
+                <p className="text-[13px] font-medium text-muted-foreground">Vidéo de présentation</p>
               </div>
             </div>
           </CardContent>
         </Card>
 
         {/* Stats + Recent */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3">
           <Card className="card-hover">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                <Send className="h-6 w-6 text-primary" />
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <Send className="h-5 w-5 text-foreground" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-card-foreground">{stats.active}</p>
-                <p className="text-sm text-card-foreground/60">Demandes en cours</p>
+                <p className="text-[13px] text-muted-foreground">Demandes en cours</p>
               </div>
             </CardContent>
           </Card>
           <Card className="card-hover">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-warning/10">
-                <Clock className="h-6 w-6 text-warning" />
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <Clock className="h-5 w-5 text-foreground" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-card-foreground">{stats.drafts}</p>
-                <p className="text-sm text-card-foreground/60">Brouillons</p>
+                <p className="text-[13px] text-muted-foreground">Brouillons</p>
               </div>
             </CardContent>
           </Card>
           <Card className="card-hover">
-            <CardContent className="flex items-center gap-4 p-6">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10">
-                <Users className="h-6 w-6 text-success" />
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                <Users className="h-5 w-5 text-foreground" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-card-foreground">{stats.total}</p>
-                <p className="text-sm text-card-foreground/60">Total demandes</p>
+                <p className="text-[13px] text-muted-foreground">Total demandes</p>
               </div>
             </CardContent>
           </Card>
@@ -140,7 +145,7 @@ const Home = () => {
         {recent.length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-foreground">Dernières demandes</h2>
+              <h2 className="section-title">Dernières demandes</h2>
               <Link to="/requests">
                 <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
                   Voir tout <ArrowRight className="h-3 w-3" />
@@ -153,10 +158,10 @@ const Home = () => {
                   <Card className="card-hover">
                     <CardContent className="flex items-center justify-between p-4">
                       <div>
-                        <p className="font-medium text-card-foreground">{r.title}</p>
-                        <p className="text-xs text-card-foreground/50">{new Date(r.created_at).toLocaleDateString("fr-FR")}</p>
+                        <p className="font-medium text-card-foreground text-[14px]">{r.title}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(r.created_at).toLocaleDateString("fr-FR")}</p>
                       </div>
-                      <Badge variant="secondary" className="text-xs">{r.status}</Badge>
+                      <Badge variant="secondary">{r.status}</Badge>
                     </CardContent>
                   </Card>
                 </Link>

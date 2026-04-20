@@ -58,7 +58,7 @@ export function AppSidebar() {
     : "";
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
+    <Sidebar collapsible="icon" className="border-r border-border/60">
       <div className="flex h-16 items-center justify-center px-4">
         {!collapsed ? (
           <img src={onbordLogo} alt="Onbord" className="h-8 w-auto" />
@@ -69,6 +69,11 @@ export function AppSidebar() {
 
       <SidebarContent>
         <SidebarGroup>
+          {!collapsed && (
+            <div className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Espace
+            </div>
+          )}
           <SidebarGroupContent>
             <SidebarMenu>
               {allItems.map((item) => (
@@ -77,8 +82,8 @@ export function AppSidebar() {
                     <NavLink
                       to={item.url}
                       end={item.url === "/dashboard"}
-                      className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground"
+                      className="flex items-center gap-3 rounded-lg px-3 py-2 text-[13px] font-medium text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+                      activeClassName="bg-muted text-primary font-semibold"
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span>{item.title}</span>}
