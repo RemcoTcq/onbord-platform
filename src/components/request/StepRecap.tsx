@@ -91,16 +91,20 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
         <p className="text-sm text-card-foreground/60">Vérifiez les informations avant d'envoyer</p>
       </div>
 
-      <div className="rounded-lg border border-border bg-muted/40 p-4">
+      <div className="sticky top-4 z-10 rounded-lg border border-border bg-background/95 p-4 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85">
         <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Type de profil recherché</p>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <TalentTypeBadge talentType={data.talentType} large showHint />
-          <span className="text-sm text-card-foreground/70">{getTalentTypeLabel(data.talentType)} sélectionné pour cette demande</span>
+          <span className="text-sm font-medium text-card-foreground">{getTalentTypeLabel(data.talentType)}</span>
         </div>
       </div>
 
       <Section title="Profil recherché" stepIdx={0}>
         <div className="space-y-3">
+          <div className="rounded-md border border-border bg-muted/30 p-3">
+            <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Talent demandé</p>
+            <TalentTypeBadge talentType={data.talentType} large />
+          </div>
           <div className="flex justify-between text-sm">
             <span className="text-card-foreground/60">Type de talent</span>
             <span className="text-card-foreground font-medium">{getTalentTypeLabel(data.talentType)}</span>

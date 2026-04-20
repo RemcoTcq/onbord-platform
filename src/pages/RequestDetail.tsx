@@ -182,6 +182,16 @@ const RequestDetail = () => {
           </div>
         </div>
 
+        <Card className="sticky top-4 z-10 border-border bg-background/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <div>
+              <p className="text-xs font-semibold uppercase text-muted-foreground">Type de talent recherché</p>
+              <p className="text-sm text-card-foreground/70">Visible immédiatement sur cette demande</p>
+            </div>
+            <TalentTypeBadge talentType={request.talent_type} large showHint />
+          </CardContent>
+        </Card>
+
         {/* Timeline */}
         <Card>
           <CardContent className="p-6">
@@ -223,7 +233,10 @@ const RequestDetail = () => {
           {/* Job details */}
           <Card>
             <CardContent className="p-6 space-y-3">
-              <h3 className="text-lg font-semibold text-card-foreground">Détails du poste</h3>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h3 className="text-lg font-semibold text-card-foreground">Détails du poste</h3>
+                <TalentTypeBadge talentType={request.talent_type} />
+              </div>
               {[
                 ["Type de talent", (request.talent_type || "student") === "graduate" ? "Jeune diplômé" : "Étudiant"],
                 ["Description", request.description],
