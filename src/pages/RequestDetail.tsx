@@ -212,6 +212,7 @@ const RequestDetail = () => {
             <CardContent className="p-6 space-y-3">
               <h3 className="text-lg font-semibold text-card-foreground">Détails du poste</h3>
               {[
+                ["Type de talent", request.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"],
                 ["Description", request.description],
                 ["Talents", request.talents_number],
                 ["Jours/semaine", request.days_per_week],
