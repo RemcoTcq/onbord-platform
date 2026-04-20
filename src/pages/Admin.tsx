@@ -31,6 +31,7 @@ interface AdminRequest {
   monthly_price: number;
   talents_number: number;
   user_id: string;
+  talent_type: string;
 }
 
 interface ProfileMap {
@@ -44,7 +45,7 @@ const Admin = () => {
 
   const fetchAll = async () => {
     const [reqRes, profRes] = await Promise.all([
-      supabase.from("requests").select("id, title, domain, status, created_at, weekly_price, monthly_price, talents_number, user_id").order("created_at", { ascending: false }),
+      supabase.from("requests").select("id, title, domain, status, created_at, weekly_price, monthly_price, talents_number, user_id, talent_type").order("created_at", { ascending: false }),
       supabase.from("profiles").select("user_id, first_name, last_name, company_name"),
     ]);
     setRequests(reqRes.data || []);
@@ -104,7 +105,12 @@ const Admin = () => {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <CardTitle className="text-lg">{req.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{req.domain} · {req.talents_number} talent(s)</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <p className="text-sm text-muted-foreground">{req.domain} · {req.talents_number} talent(s)</p>
+                        <Badge variant="secondary" className="text-xs">
+                          {req.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"}
+                        </Badge>
+                      </div>
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                         <Building2 className="h-3 w-3" />
                         <span>{getProfileLabel(req.user_id)}</span>

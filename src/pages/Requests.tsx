@@ -15,6 +15,7 @@ interface Request {
   domain: string;
   status: string;
   created_at: string;
+  talent_type: string;
 }
 
 const statusColor = (status: string) => {
@@ -39,7 +40,7 @@ const Requests = () => {
     const load = async () => {
       const { data } = await supabase
         .from("requests")
-        .select("id, title, domain, status, created_at")
+        .select("id, title, domain, status, created_at, talent_type")
         .eq("user_id", user.id)
         .neq("status", "draft")
         .order("created_at", { ascending: false });
@@ -113,8 +114,12 @@ const Requests = () => {
                       <h3 className="font-semibold text-card-foreground truncate">{req.title}</h3>
                       <Badge className={statusColor(req.status)}>{req.status}</Badge>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-card-foreground/50">
+                    <div className="flex items-center gap-2 text-xs text-card-foreground/50 flex-wrap">
                       <span>{req.domain}</span>
+                      <span>•</span>
+                      <Badge variant="outline" className="text-xs font-normal border-card-foreground/20 text-card-foreground/70">
+                        {req.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"}
+                      </Badge>
                       <span>•</span>
                       <span>{new Date(req.created_at).toLocaleDateString("fr-FR")}</span>
                     </div>
