@@ -77,8 +77,13 @@ const Drafts = () => {
                     <h3 className="font-semibold text-card-foreground truncate">
                       {draft.title || "Sans titre"}
                     </h3>
-                    <div className="flex items-center gap-3 text-xs text-card-foreground/50 mt-1">
+                    <div className="flex items-center gap-2 text-xs text-card-foreground/50 mt-1 flex-wrap">
                       {draft.domain && <span>{draft.domain}</span>}
+                      <span>•</span>
+                      <Badge variant="outline" className="text-xs font-normal border-card-foreground/20 text-card-foreground/70">
+                        {draft.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"}
+                      </Badge>
+                      <span>•</span>
                       <span>{new Date(draft.created_at).toLocaleDateString("fr-FR")}</span>
                     </div>
                   </div>
