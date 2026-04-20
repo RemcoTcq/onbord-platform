@@ -43,7 +43,7 @@ const Home = () => {
 
   const steps = [
     { icon: FileText, title: "Décrivez votre besoin", desc: "Remplissez le formulaire avec les compétences et détails recherchés" },
-    { icon: Search, title: "On trouve les profils", desc: "Notre équipe identifie les meilleurs talents étudiants pour vous" },
+    { icon: Search, title: "On trouve les profils", desc: "Notre équipe identifie les meilleurs talents pour vous" },
     { icon: Rocket, title: "Vous lancez la mission", desc: "Validez les profils et démarrez la collaboration" },
   ];
 
@@ -53,10 +53,10 @@ const Home = () => {
         {/* Hero */}
         <div className="rounded-2xl bg-gradient-to-br from-accent to-secondary p-8 lg:p-12">
           <h1 className="text-3xl font-extrabold tracking-tight text-foreground lg:text-4xl">
-            Trouvez les bons talents<br />étudiants rapidement
+            Recrutez les talents de demain,<br />dès aujourd'hui
           </h1>
           <p className="mt-4 max-w-xl text-muted-foreground text-lg">
-            Onbord vous connecte aux meilleurs profils étudiants pour vos missions, en quelques clics.
+            Onbord vous connecte aux meilleurs profils pour vos missions, en quelques clics.
           </p>
           <Link to="/request/new">
             <Button size="lg" className="mt-6 gap-2 bg-card text-card-foreground hover:bg-card/90 font-semibold">
