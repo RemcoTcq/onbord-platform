@@ -96,23 +96,23 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-2">
+      <SidebarFooter className="p-2 border-t border-border/60">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className={cn(
-              "flex items-center gap-3 w-full rounded-lg py-2 hover:bg-sidebar-accent transition-colors text-left overflow-hidden",
+              "flex items-center gap-3 w-full rounded-lg py-2 hover:bg-muted/60 transition-colors text-left overflow-hidden",
               collapsed ? "justify-center px-0" : "px-2"
             )}>
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted text-foreground text-xs font-semibold">
                 {initials || <User className="h-3.5 w-3.5" />}
               </div>
               {!collapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  <p className="text-[13px] font-medium text-sidebar-foreground truncate">
                     {displayName || user?.email || "Mon compte"}
                   </p>
                   {companyName && (
-                    <p className="text-xs text-sidebar-foreground/60 truncate">{companyName}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{companyName}</p>
                   )}
                 </div>
               )}
