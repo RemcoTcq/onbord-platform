@@ -83,6 +83,7 @@ export type Database = {
           skills: string[] | null
           soft_skills: string[] | null
           status: string
+          talent_type: string
           talents_number: number
           title: string
           user_id: string
@@ -107,6 +108,7 @@ export type Database = {
           skills?: string[] | null
           soft_skills?: string[] | null
           status?: string
+          talent_type?: string
           talents_number?: number
           title: string
           user_id: string
@@ -131,6 +133,7 @@ export type Database = {
           skills?: string[] | null
           soft_skills?: string[] | null
           status?: string
+          talent_type?: string
           talents_number?: number
           title?: string
           user_id?: string
