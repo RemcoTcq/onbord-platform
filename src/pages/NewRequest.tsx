@@ -71,6 +71,7 @@ const NewRequest = () => {
       title: data.title || "Sans titre",
       description: data.description,
       domain: data.domain || "Non défini",
+      talent_type: data.talentType,
       skills: data.mustHaveSkills,
       nice_to_have_skills: data.niceToHaveSkills,
       soft_skills: data.mustHaveSoftSkills,

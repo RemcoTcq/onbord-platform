@@ -37,6 +37,7 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
       title: data.title,
       description: data.description,
       domain: data.domain,
+      talent_type: data.talentType,
       skills: data.mustHaveSkills,
       nice_to_have_skills: data.niceToHaveSkills,
       soft_skills: data.mustHaveSoftSkills,
@@ -90,6 +91,10 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
 
       <Section title="Profil recherché" stepIdx={0}>
         <div className="space-y-3">
+          <div className="flex justify-between text-sm">
+            <span className="text-card-foreground/60">Type de talent</span>
+            <span className="text-card-foreground font-medium">{data.talentType === "graduate" ? "Jeune diplômé" : "Étudiant"}</span>
+          </div>
           <div className="flex justify-between text-sm">
             <span className="text-card-foreground/60">Domaine</span>
             <span className="text-card-foreground font-medium">{data.domain}</span>
