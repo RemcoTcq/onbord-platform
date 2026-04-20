@@ -73,9 +73,11 @@ export type Database = {
           description: string | null
           diploma: string | null
           domain: string
+          employment_type: string | null
           id: string
           languages: Json | null
           monthly_price: number
+          natural_language_query: string | null
           nice_to_have_skills: string[] | null
           nice_to_have_soft_skills: string[] | null
           schedule_details: Json | null
@@ -98,9 +100,11 @@ export type Database = {
           description?: string | null
           diploma?: string | null
           domain: string
+          employment_type?: string | null
           id?: string
           languages?: Json | null
           monthly_price?: number
+          natural_language_query?: string | null
           nice_to_have_skills?: string[] | null
           nice_to_have_soft_skills?: string[] | null
           schedule_details?: Json | null
@@ -123,9 +127,11 @@ export type Database = {
           description?: string | null
           diploma?: string | null
           domain?: string
+          employment_type?: string | null
           id?: string
           languages?: Json | null
           monthly_price?: number
+          natural_language_query?: string | null
           nice_to_have_skills?: string[] | null
           nice_to_have_soft_skills?: string[] | null
           schedule_details?: Json | null
