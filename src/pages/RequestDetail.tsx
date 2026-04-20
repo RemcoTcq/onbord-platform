@@ -7,7 +7,7 @@ import { STATUSES } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Clock, FileDown, Loader2, Trash2, Pencil, Building2 } from "lucide-react";
+import { Check, Clock, FileDown, Loader2, Trash2, Pencil, Building2, GraduationCap, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -131,16 +131,23 @@ const RequestDetail = () => {
       <div className="mx-auto max-w-4xl space-y-6">
         {/* Header */}
         <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">{request.title}</h1>
-            <div className="flex items-center gap-2 mt-1 flex-wrap">
-              <p className="text-muted-foreground">{request.domain}</p>
-              <Badge variant="secondary">
-                {request.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"}
-              </Badge>
+          <div className="space-y-3">
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">{request.title}</h1>
+              <p className="text-muted-foreground mt-1">{request.domain}</p>
+            </div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-1.5 text-primary-foreground shadow-sm">
+              {(request.talent_type || "student") === "graduate" ? (
+                <UserCheck className="h-4 w-4" />
+              ) : (
+                <GraduationCap className="h-4 w-4" />
+              )}
+              <span className="text-sm font-semibold">
+                {(request.talent_type || "student") === "graduate" ? "Jeune diplômé" : "Étudiant"}
+              </span>
             </div>
             {ownerLabel && (
-              <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Building2 className="h-4 w-4" />
                 <span>{ownerLabel}</span>
               </div>
@@ -217,7 +224,7 @@ const RequestDetail = () => {
             <CardContent className="p-6 space-y-3">
               <h3 className="text-lg font-semibold text-card-foreground">Détails du poste</h3>
               {[
-                ["Type de talent", request.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"],
+                ["Type de talent", (request.talent_type || "student") === "graduate" ? "Jeune diplômé" : "Étudiant"],
                 ["Description", request.description],
                 ["Talents", request.talents_number],
                 ["Jours/semaine", request.days_per_week],
