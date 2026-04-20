@@ -186,7 +186,6 @@ const RequestDetail = () => {
           <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
             <div>
               <p className="text-xs font-semibold uppercase text-muted-foreground">Type de talent recherché</p>
-              <p className="text-sm text-card-foreground/70">Visible immédiatement sur cette demande</p>
             </div>
             <TalentTypeBadge talentType={request.talent_type} large showHint />
           </CardContent>
