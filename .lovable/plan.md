@@ -1,83 +1,57 @@
 
-Objectif
 
-Faire en sorte que le type de talent soit réellement fiable et visible partout dans le parcours:
-- pendant le brouillon
-- dans le récapitulatif avant envoi
-- dans “Mes demandes”
-- dans le détail d’une demande
-- côté admin
+## Constat
 
-Constat à corriger
+Sur la page actuelle `/request/185de58a-...`, la donnée renvoyée par le backend contient bien `talent_type: "student"` (vu dans les requêtes réseau). Le code de `RequestDetail.tsx` affiche déjà :
+- un badge "Étudiant / Jeune diplômé" à côté du domaine en haut
+- une ligne "Type de talent" dans le bloc "Détails du poste"
 
-Le schéma backend est déjà prêt:
-- la colonne `requests.talent_type` existe
-- la page détail sait déjà l’afficher quand la donnée est présente
+Mais visiblement, sur ta page actuelle, ces éléments ne sont pas assez visibles ou pas assez clairs. De plus, dans les requêtes réseau récentes, les payloads d'auto-save de brouillon **n'incluent pas encore `talent_type`** (le champ est absent du body POST/PATCH), ce qui veut dire que la dernière version du code n'a pas été correctement appliquée au runtime ou que la sélection "Jeune diplômé" n'est jamais persistée.
 
-Le vrai problème est un alignement incomplet entre écriture et lecture:
-- certaines requêtes actives de sauvegarde/envoi n’embarquent pas `talent_type`
-- la page Brouillons ne sélectionne pas `talent_type` du tout
-- le runtime actif semble encore utiliser des sélections/payloads incomplets, donc il faut réappliquer et vérifier le bon chemin de code
+## Ce que je vais faire
 
-Ce que je vais corriger
+### 1. Rendre le type de talent ultra-visible sur la page détail
 
-1. Fiabiliser la persistance du type de talent
-- Revoir `src/pages/NewRequest.tsx` pour garantir que l’auto-save de brouillon envoie toujours `talent_type`
-- Revoir `src/components/request/StepRecap.tsx` pour garantir que l’envoi final met aussi `talent_type`
-- Vérifier le rechargement d’un brouillon: si la demande a `talent_type`, le formulaire doit réinjecter correctement `student` ou `graduate`
+Dans `src/pages/RequestDetail.tsx`, retravailler la zone d'en-tête pour que le type de talent soit impossible à manquer :
+- Mettre un **gros badge coloré et contrasté** juste sous le titre (pas une petite étiquette grise à côté du domaine)
+- Ajouter une **carte dédiée "Type de talent"** en haut, avec une icône et le label en grand : "Étudiant" ou "Jeune diplômé"
+- Garder aussi la ligne dans le bloc "Détails du poste"
 
-2. Rendre le type visible dans les brouillons
-- Mettre à jour `src/pages/Drafts.tsx`
-- Ajouter `talent_type` dans le `select(...)`
-- Afficher un badge “Étudiant” / “Jeune diplômé” sur chaque carte brouillon, au même niveau visuel que le domaine et la date
+### 2. Garantir que la donnée est bien envoyée au backend
 
-3. Rendre le type visible dans Mes demandes
-- Confirmer et, si nécessaire, corriger `src/pages/Requests.tsx`
-- S’assurer que la requête récupère bien `talent_type`
-- Garder un badge visible sur chaque demande envoyée
+Vérifier et corriger si besoin :
+- `src/pages/NewRequest.tsx` : confirmer que l'auto-save de brouillon envoie bien `talent_type` dans **chaque** PATCH et POST
+- `src/components/request/StepRecap.tsx` : confirmer que l'envoi final envoie bien `talent_type`
+- Forcer une valeur par défaut explicite côté front pour éviter tout `undefined` qui serait filtré par Supabase
 
-4. Rendre le type visible dans le détail de la demande
-- Vérifier `src/pages/RequestDetail.tsx`
-- Garder le badge en haut de page
-- Garder la ligne “Type de talent” dans le bloc de détails
-- Ajouter un fallback sûr si une ancienne ligne n’a pas encore la donnée attendue
+### 3. Rendre visible aussi sur les autres pages
 
-5. Aligner aussi la vue admin
-- Vérifier `src/pages/Admin.tsx` pour que la liste admin charge et affiche systématiquement `talent_type`
-- Vérifier que le détail admin profite bien du même affichage que la page détail
+- `src/pages/Drafts.tsx` : badge sur chaque carte brouillon
+- `src/pages/Requests.tsx` : badge sur chaque carte de demande envoyée
+- `src/pages/Admin.tsx` : badge dans la liste admin
 
-6. Sécuriser les cas existants
-- Prévoir un affichage robuste pour les anciennes demandes:
-  - si `talent_type === "graduate"` → “Jeune diplômé”
-  - sinon → “Étudiant”
-- Ne pas toucher à la logique métier du formulaire ni au Step 2
+### 4. Sécuriser l'affichage pour les anciennes demandes
 
-Fichiers concernés
+Fallback robuste : si `talent_type` est absent ou null, on affiche "Étudiant" (valeur par défaut historique).
 
-- `src/pages/NewRequest.tsx`
-- `src/components/request/StepRecap.tsx`
-- `src/pages/Drafts.tsx`
-- `src/pages/Requests.tsx`
-- `src/pages/RequestDetail.tsx`
-- `src/pages/Admin.tsx`
+## Vérification de bout en bout
 
-Vérification prévue
+Après les changements, je vais :
+1. recharger la page actuelle `/request/185de58a-...` et vérifier que le badge "Étudiant" est bien gros et visible en haut
+2. créer une nouvelle demande en sélectionnant "Jeune diplômé"
+3. inspecter la requête réseau POST/PATCH pour confirmer que `talent_type: "graduate"` est bien dans le body
+4. ouvrir le brouillon dans Brouillons → vérifier le badge
+5. envoyer la demande → vérifier dans Mes demandes
+6. ouvrir le détail → vérifier le gros badge et la ligne "Type de talent"
 
-Je vérifierai de bout en bout le scénario exact demandé:
-1. créer une demande en choisissant “Jeune diplômé”
-2. vérifier que le récapitulatif affiche bien “Jeune diplômé”
-3. vérifier que le brouillon affiche bien le badge
-4. envoyer la demande
-5. vérifier “Mes demandes”
-6. ouvrir le détail de la demande
-7. vérifier l’affichage côté admin
-8. contrôler que les requêtes réseau POST/PATCH/GET contiennent bien `talent_type`
+## Fichiers concernés
 
-Détails techniques
+- `src/pages/RequestDetail.tsx` (visibilité forte)
+- `src/pages/NewRequest.tsx` (persistance)
+- `src/components/request/StepRecap.tsx` (persistance)
+- `src/pages/Drafts.tsx`, `src/pages/Requests.tsx`, `src/pages/Admin.tsx` (badges listes)
 
-- Aucun changement de structure de base n’est nécessaire
-- Le correctif porte surtout sur:
-  - les payloads envoyés au backend
-  - les champs sélectionnés dans les requêtes
-  - le rendu UI des badges/labels
-- Si le souci venait d’un chemin de code actif différent ou d’un rendu stale dans la preview, je réappliquerai les changements sur le code réellement exécuté et je validerai ensuite avec les requêtes réseau
+## Détails techniques
+
+Le composant Badge `secondary` actuel sur fond clair peut être peu visible selon le thème. Je vais utiliser une variante plus marquée (couleur primaire ou accent + icône `GraduationCap`) pour le badge principal, et placer en plus une carte "Type de talent" juste après le titre afin que ce soit la première information vue par l'admin et l'utilisateur.
+
