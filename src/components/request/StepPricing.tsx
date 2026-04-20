@@ -15,7 +15,7 @@ const INCLUDES = [
   "Gestion administrative",
   "Contrat",
   "Support dédié",
-  "Suivi de mission",
+  "Suivi",
 ];
 
 export const StepPricing = ({ onNext, onBack }: Props) => {
