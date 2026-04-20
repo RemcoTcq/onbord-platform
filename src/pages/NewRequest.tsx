@@ -5,15 +5,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import { RequestFormData, defaultFormData } from "@/lib/request-types";
 import { normalizeTalentType } from "@/lib/talent-type";
-import { StepTalentInfo } from "@/components/request/StepTalentInfo";
-import { StepJobDetails } from "@/components/request/StepJobDetails";
+import { StepNaturalLanguage } from "@/components/request/StepNaturalLanguage";
+import { StepProfileAndJob } from "@/components/request/StepProfileAndJob";
 import { StepPricing } from "@/components/request/StepPricing";
 import { StepRecap } from "@/components/request/StepRecap";
 import { StepConfirmation } from "@/components/request/StepConfirmation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, Save } from "lucide-react";
 
-const steps = ["Talent", "Détails", "Tarif", "Récap"];
+const steps = ["Recherche IA", "Formulaire", "Tarif", "Récap"];
 
 const NewRequest = () => {
   const { user } = useAuth();
@@ -36,6 +36,7 @@ const NewRequest = () => {
       if (row) {
         setDraftId(id);
         setData({
+          naturalLanguageQuery: (row as any).natural_language_query || "",
           talentType: normalizeTalentType((row as any).talent_type),
           domain: row.domain || "",
           mustHaveSkills: row.skills || [],
@@ -52,22 +53,24 @@ const NewRequest = () => {
           scheduleType: row.schedule_type as "flexible" | "fixed",
           scheduleDetails: (row.schedule_details as any) || {},
           workMode: row.work_mode || "remote",
+          employmentType: ((row as any).employment_type as any) || null,
           weeklyHours: Number(row.weekly_hours),
           weeklyPrice: Number(row.weekly_price),
           monthlyPrice: Number(row.monthly_price),
         });
+        // Skip the AI step when editing an existing draft
+        setStep(1);
       }
       initialized.current = true;
     };
     loadDraft();
   }, []);
 
-  // Auto-save as draft
   const saveDraft = useCallback(async () => {
     if (!user || !initialized.current) return;
     setSaveStatus("saving");
 
-    const payload = {
+    const payload: any = {
       user_id: user.id,
       title: data.title || "Sans titre",
       description: data.description,
@@ -89,6 +92,8 @@ const NewRequest = () => {
       weekly_price: data.weeklyPrice,
       monthly_price: data.monthlyPrice,
       status: "draft",
+      natural_language_query: data.naturalLanguageQuery || null,
+      employment_type: data.employmentType || null,
     };
 
     if (draftId) {
@@ -126,7 +131,6 @@ const NewRequest = () => {
   return (
     <AppLayout>
       <div className="mx-auto max-w-3xl space-y-6">
-        {/* Auto-save indicator */}
         <div className="flex items-center justify-end gap-2 text-xs">
           {saveStatus === "saving" && (
             <span className="flex items-center gap-1 text-muted-foreground">
@@ -140,7 +144,6 @@ const NewRequest = () => {
           )}
         </div>
 
-        {/* Stepper */}
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -173,11 +176,10 @@ const NewRequest = () => {
           </CardContent>
         </Card>
 
-        {/* Form steps */}
         <Card>
           <CardContent className="p-6 lg:p-8">
-            {step === 0 && <StepTalentInfo data={data} onChange={handleChange} onNext={() => setStep(1)} />}
-            {step === 1 && <StepJobDetails data={data} onChange={handleChange} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
+            {step === 0 && <StepNaturalLanguage data={data} onChange={handleChange} onNext={() => setStep(1)} />}
+            {step === 1 && <StepProfileAndJob data={data} onChange={handleChange} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
             {step === 2 && <StepPricing data={data} onChange={handleChange} onNext={() => setStep(3)} onBack={() => setStep(1)} />}
             {step === 3 && (
               <StepRecap
