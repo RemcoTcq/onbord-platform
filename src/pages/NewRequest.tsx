@@ -35,6 +35,7 @@ const NewRequest = () => {
       if (row) {
         setDraftId(id);
         setData({
+          talentType: ((row as any).talent_type as "student" | "graduate") || "student",
           domain: row.domain || "",
           mustHaveSkills: row.skills || [],
           niceToHaveSkills: (row as any).nice_to_have_skills || [],

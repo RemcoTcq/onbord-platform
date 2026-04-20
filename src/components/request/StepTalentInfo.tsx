@@ -160,8 +160,36 @@ export const StepTalentInfo = ({ data, onChange, onNext }: Props) => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-semibold text-card-foreground">Profil recherché</h2>
-        <p className="text-sm text-card-foreground/60">Décrivez les compétences du talent idéal</p>
+        <h2 className="text-xl font-semibold text-card-foreground">Profil du talent</h2>
+        <p className="text-sm text-card-foreground/60">Définissez le type de talent et ses compétences</p>
+      </div>
+
+      {/* Talent type */}
+      <div className="space-y-2">
+        <Label className="text-card-foreground">Type de talent *</Label>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { value: "student" as const, title: "Étudiant", desc: "En cours d'études" },
+            { value: "graduate" as const, title: "Jeune diplômé", desc: "Diplômé récent" },
+          ].map((opt) => {
+            const selected = data.talentType === opt.value;
+            return (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => onChange({ talentType: opt.value })}
+                className={`rounded-lg border p-4 text-left transition-all ${
+                  selected
+                    ? "border-primary bg-primary/5 ring-2 ring-primary"
+                    : "border-card-foreground/15 hover:border-card-foreground/30 bg-card"
+                }`}
+              >
+                <p className="font-semibold text-card-foreground">{opt.title}</p>
+                <p className="text-xs text-card-foreground/60 mt-1">{opt.desc}</p>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Domain */}
