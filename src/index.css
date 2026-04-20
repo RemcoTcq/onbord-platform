@@ -6,44 +6,44 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 210 83% 16%;
+    --background: 210 20% 99%;
+    --foreground: 213 75% 17%;
 
     --card: 0 0% 100%;
-    --card-foreground: 210 83% 16%;
+    --card-foreground: 213 75% 17%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 210 83% 16%;
+    --popover-foreground: 213 75% 17%;
 
-    --primary: 210 83% 16%;
+    --primary: 213 75% 17%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 210 83% 16%;
+    --secondary: 214 25% 96%;
+    --secondary-foreground: 213 75% 17%;
 
-    --muted: 210 20% 96%;
-    --muted-foreground: 210 10% 45%;
+    --muted: 214 25% 96%;
+    --muted-foreground: 213 15% 45%;
 
-    --accent: 210 20% 93%;
-    --accent-foreground: 210 83% 16%;
+    --accent: 213 75% 95%;
+    --accent-foreground: 213 75% 17%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 210 15% 90%;
-    --input: 210 15% 90%;
-    --ring: 210 60% 50%;
+    --border: 214 20% 92%;
+    --input: 214 20% 92%;
+    --ring: 213 75% 17%;
 
-    --radius: 0.75rem;
+    --radius: 0.625rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 210 83% 16%;
-    --sidebar-primary: 210 83% 16%;
+    --sidebar-foreground: 213 75% 17%;
+    --sidebar-primary: 213 75% 17%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 96%;
-    --sidebar-accent-foreground: 210 83% 16%;
-    --sidebar-border: 210 15% 90%;
-    --sidebar-ring: 210 60% 50%;
+    --sidebar-accent: 214 25% 96%;
+    --sidebar-accent-foreground: 213 75% 17%;
+    --sidebar-border: 214 20% 92%;
+    --sidebar-ring: 213 75% 17%;
 
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
@@ -57,17 +57,26 @@
     @apply border-border;
   }
 
+  html {
+    font-family: 'Onest', system-ui, sans-serif;
+  }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: "ss01", "cv11";
   }
 }
 
 @layer utilities {
   .gradient-primary {
-    background: linear-gradient(135deg, hsl(210, 83%, 16%) 0%, hsl(210, 60%, 28%) 100%);
+    background: linear-gradient(135deg, hsl(213, 75%, 17%) 0%, hsl(213, 60%, 28%) 100%);
   }
 
   .card-hover {
-    @apply transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5;
+    @apply transition-all duration-150 hover:border-border hover:shadow-[0_4px_12px_rgba(15,23,42,0.06)];
+  }
+
+  .section-title {
+    @apply text-[13px] font-semibold uppercase tracking-wider text-muted-foreground;
   }
 }
