@@ -1,5 +1,8 @@
+export type TalentType = "student" | "graduate";
+
 export interface RequestFormData {
   // Step 1 - Talent
+  talentType: TalentType;
   domain: string;
   mustHaveSkills: string[];
   niceToHaveSkills: string[];
@@ -23,6 +26,7 @@ export interface RequestFormData {
 }
 
 export const defaultFormData: RequestFormData = {
+  talentType: "student",
   domain: "",
   mustHaveSkills: [],
   niceToHaveSkills: [],
