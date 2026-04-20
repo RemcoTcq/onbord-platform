@@ -1,83 +1,47 @@
 
 
-## Plan : Refonte du formulaire de demande
+## Constat
 
-### Step 1 — Recherche en langage naturel (nouveau)
+Quand l'IA renvoie le profil, deux problèmes empêchent la pré-sélection visuelle :
 
-Le Step 1 ne contient plus tout le profil. Il devient une page très simple :
+1. **Domaine** : si l'IA renvoie "Développement", "IT", "Tech" au lieu de "IT & Software", le matching actuel (égalité ou `includes`) échoue → `domain` reste vide → la section Hard Skills ne s'affiche même pas.
+2. **Hard skills** : l'IA renvoie souvent des libellés légèrement différents de la liste catalogue (ex. "React" vs "React.js", "Node" vs "Node.js", "TypeScript" — absent du catalogue). Comme on injecte ces valeurs telles quelles dans `mustHaveSkills`, les badges du catalogue ne s'allument pas en bleu (le code compare strictement par chaîne).
 
-- Un grand `Textarea` avec le placeholder demandé : *"Décrivez le talent que vous recherchez... (ex: développeur JavaScript junior 3 jours par semaine)"*
-- Un bouton **"Générer le profil"** à droite/dessous
-- Au clic : appel d'une edge function backend qui interroge l'IA et renvoie un JSON structuré
-- Les champs reconnus (`domain`, `hardSkills`, `softSkills`, `talentType`, `diplome`) sont **pré-remplis** dans le state du formulaire
-- Une fois la génération terminée → on passe automatiquement au Step 2 (déjà pré-rempli, l'utilisateur peut affiner)
-- L'utilisateur peut aussi sauter cette étape et aller direct au Step 2 manuellement
+## Correctifs
 
-**Note technique IA** : la consigne mentionne Anthropic Claude. Lovable utilise par défaut **Lovable AI** (gateway intégré, sans clé API à fournir, gratuit pendant la période d'inclusion). J'utiliserai `google/gemini-3-flash-preview` qui est rapide, gratuit et parfaitement adapté à de l'extraction structurée. Le system prompt fourni sera utilisé tel quel, et l'extraction se fera via tool calling pour garantir un JSON propre.
+### 1. Edge function `generate-talent-profile` — meilleur prompt + matching robuste
 
-### Step 2 — Tous les autres champs (Profil + Détails fusionnés)
+- **Forcer l'IA à choisir parmi la liste fermée** : le system prompt et le schéma `extract_profile` reçoivent la liste exacte des 6 domaines et la liste complète des hard skills disponibles pour chaque domaine. Le champ `domain` devient un `enum` strict et `hardSkills` doit être un sous-ensemble du catalogue du domaine choisi.
+- **Tolérance côté serveur** : après réception, on normalise (minuscules + suppression des accents) et on matche les hard skills retournés contre le catalogue du domaine via :
+  - égalité normalisée
+  - alias courants (`react` → `React.js`, `node` → `Node.js`, `vue` → `Vue.js`, `angular` → `Angular.js`, `js` → `JavaScript`, `ts` → `JavaScript`, `excel` → `Microsoft Excel`, etc.)
+  - `includes` partiel dans les deux sens (dernier recours)
+- Les skills qui ne matchent vraiment rien sont conservés tels quels dans la réponse, mais placés dans un nouveau champ `customHardSkills: string[]` séparé.
+- Réponse JSON enrichie :
+  ```
+  { domain, hardSkills (catalogue), customHardSkills, softSkills, talentType, diplome }
+  ```
 
-Le Step 2 regroupe maintenant ce qui était avant éclaté entre Step Talent et Step Détails :
+### 2. Frontend `StepNaturalLanguage.tsx` — exploiter la nouvelle réponse
 
-**Bloc "Profil recherché"** (vient du Step Talent actuel)
-- Type de talent (Étudiant / Jeune diplômé)
-- Domaine, Hard skills, Soft skills, Langues, Diplôme
+- Pré-remplit `mustHaveSkills` avec les `hardSkills` matchées (donc qui s'allumeront en bleu dans le catalogue du Step 2)
+- Ajoute les `customHardSkills` à `mustHaveSkills` aussi (ils apparaîtront dans le bloc "Must have" mais pas en bleu dans le catalogue, ce qui est attendu)
+- Idem pour `softSkills`
+- Garde `naturalLanguageQuery`, `talentType`, `domain`, `diploma`
 
-**Bloc "Détails du poste"** (vient du Step Détails actuel)
-- Titre, description, nombre de talents, mode de travail
-- **Planning conditionnel selon le type de talent :**
+### 3. Step 2 `StepProfileAndJob.tsx` — affichage cohérent
 
-#### Si "Étudiant" :
-- Comportement actuel conservé : sélecteur "jours par semaine" + horaires flexibles ou fixes (matin/après-midi par jour)
+Aucun changement de logique : grâce au matching serveur, `data.domain` correspondra toujours à un des 6 items, donc la section Hard Skills s'ouvre, et les skills sélectionnées seront reconnues dans le catalogue → badges en bleu cliquables (toggle).
 
-#### Si "Jeune diplômé" :
-- Nouveau choix : **"Temps plein"** ou **"Temps partiel"**
-- Si **Temps plein** → 5 jours/sem automatiquement, pas de sélecteur d'horaires
-- Si **Temps partiel** → sélecteur de nombre de jours, **minimum 3 jours**, maximum 4
+## Fichiers modifiés
 
-### Conséquences sur les autres steps
+- `supabase/functions/generate-talent-profile/index.ts` — nouveau prompt avec listes fermées, matching côté serveur, alias, sortie enrichie
+- `src/components/request/StepNaturalLanguage.tsx` — fusion `hardSkills + customHardSkills` dans `mustHaveSkills`
 
-- Les anciens steps deviennent : **1. IA · 2. Formulaire · 3. Tarif · 4. Récap** (toujours 4 cartes dans le stepper)
-- `StepPricing` et `StepRecap` continuent de fonctionner — la logique pricing tient compte du temps plein (40h × nb talents) pour les jeunes diplômés
-- Le récap affiche "Temps plein" / "Temps partiel (X jours)" pour les jeunes diplômés au lieu de "Flexibles / Fixes"
+## Vérification
 
-### Modifications de données
-
-Ajout dans `RequestFormData` (et persistance Supabase) :
-- `naturalLanguageQuery: string` — la phrase saisie au Step 1 (pour traçabilité)
-- `employmentType: "full_time" | "part_time" | null` — utilisé uniquement pour les jeunes diplômés
-
-Ces deux champs vont dans la table `requests` via une migration (colonnes `natural_language_query text`, `employment_type text`).
-
-### Code supprimé / nettoyé
-
-- Suppression du composant `StepJobDetails.tsx` (fusionné dans Step 2)
-- Suppression dans `StepTalentInfo` du bouton "Suivant" autonome → remplacé par le nouveau Step 2 unifié `StepProfileAndJob.tsx`
-- Suppression des imports / props devenus inutiles
-- Mise à jour de `NewRequest.tsx` : nouveau tableau `steps = ["Recherche IA", "Formulaire", "Tarif", "Récap"]` et nouveau routage des composants
-
-### Edge function `generate-talent-profile`
-
-Nouveau fichier `supabase/functions/generate-talent-profile/index.ts` :
-- Reçoit `{ description: string }` du frontend
-- Appelle Lovable AI Gateway avec le system prompt **exact** demandé par l'utilisateur
-- Utilise tool calling (`extract_profile`) pour forcer un JSON propre
-- Mappe le résultat vers les valeurs internes : `Étudiant` → `student`, `Jeune diplômé` → `graduate`, et matche le `domain` retourné contre la liste `DOMAINS` (fallback sur match approximatif insensible à la casse)
-- Gère les erreurs 429 (rate limit) et 402 (crédits) avec un toast côté frontend
-- `verify_jwt = false` n'est pas nécessaire (utilisateur déjà connecté)
-
-### Fichiers concernés
-
-- **Créés** : `src/components/request/StepNaturalLanguage.tsx`, `src/components/request/StepProfileAndJob.tsx`, `supabase/functions/generate-talent-profile/index.ts`, migration SQL
-- **Modifiés** : `src/pages/NewRequest.tsx`, `src/lib/request-types.ts`, `src/components/request/StepRecap.tsx`, `src/components/request/StepPricing.tsx` (logique heures pour temps plein)
-- **Supprimés** : `src/components/request/StepJobDetails.tsx`, `src/components/request/StepTalentInfo.tsx` (remplacé par StepProfileAndJob)
-
-### Vérification de bout en bout
-
-1. Aller sur "Nouvelle demande"
-2. Taper *"développeur React junior 3 jours par semaine"* → cliquer Générer le profil
-3. Vérifier que le Step 2 est pré-rempli (domaine IT & Software, React, talent type Étudiant)
-4. Affiner si besoin, passer au tarif puis au récap, envoyer
-5. Recommencer en sélectionnant "Jeune diplômé" → vérifier que le Step 2 propose Temps plein / Temps partiel (min 3 jours)
-6. Vérifier le rendu sur mobile
+1. Taper *"Développeur React et Node 3 jours par semaine"* → Générer
+2. Au Step 2, vérifier : domaine = **IT & Software**, badges **React.js** et **Node.js** allumés en bleu dans le catalogue, et présents dans la colonne "Must have"
+3. Taper *"Comptable junior maîtrisant Excel et SAP"* → vérifier domaine **Finance** ou **Administration** (selon ce que choisit l'IA), avec **Microsoft Excel** ou **SAP** matchés
+4. Taper une description floue ("Stagiaire marketing créatif") → vérifier que le domaine **Marketing** est sélectionné même sans skill mentionné
 
