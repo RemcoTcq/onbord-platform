@@ -45,7 +45,7 @@ const Admin = () => {
 
   const fetchAll = async () => {
     const [reqRes, profRes] = await Promise.all([
-      supabase.from("requests").select("id, title, domain, status, created_at, weekly_price, monthly_price, talents_number, user_id").order("created_at", { ascending: false }),
+      supabase.from("requests").select("id, title, domain, status, created_at, weekly_price, monthly_price, talents_number, user_id, talent_type").order("created_at", { ascending: false }),
       supabase.from("profiles").select("user_id, first_name, last_name, company_name"),
     ]);
     setRequests(reqRes.data || []);
