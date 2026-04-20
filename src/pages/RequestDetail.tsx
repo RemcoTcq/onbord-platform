@@ -138,7 +138,6 @@ const RequestDetail = () => {
               <h1 className="text-2xl font-bold text-foreground">{request.title}</h1>
               <p className="text-muted-foreground mt-1">{request.domain}</p>
             </div>
-            <TalentTypeBadge talentType={request.talent_type} large showHint className="shadow-sm" />
             {ownerLabel && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Building2 className="h-4 w-4" />
