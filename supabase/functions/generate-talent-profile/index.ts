@@ -15,8 +15,15 @@ const HARD_SKILLS_MAP: Record<string, string[]> = {
   "Ingénierie": ["AutoCAD", "Autodesk", "SolidWorks", "Solid Edge", "Siemens PLC", "Siemens NX", "Matlab", "EPLAN", "R Studio", "Vectorworks", "Revit", "Archicad", "LaTeX", "Primavera", "Inventor", "Arduino", "Sony Vegas", "Raspberry Pi"],
 };
 
+const ALL_HARD_SKILLS = Array.from(new Set(Object.values(HARD_SKILLS_MAP).flat()));
+
+const SOFT_SKILLS = [
+  "Communication", "Travail en équipe", "Autonomie", "Proactivité", "Organisation",
+  "Adaptabilité", "Gestion du temps", "Esprit analytique", "Résolution de problèmes",
+  "Créativité", "Leadership", "Rigueur", "Sens du détail", "Esprit critique", "Orientation résultats",
+] as const;
+
 const SKILL_ALIASES: Record<string, string> = {
-  // IT
   "react": "React.js",
   "reactjs": "React.js",
   "react js": "React.js",
@@ -29,8 +36,6 @@ const SKILL_ALIASES: Record<string, string> = {
   "angularjs": "Angular.js",
   "ember": "Ember.js",
   "js": "JavaScript",
-  "ts": "JavaScript",
-  "typescript": "JavaScript",
   "html": "HTML/CSS",
   "css": "HTML/CSS",
   "html/css": "HTML/CSS",
@@ -40,7 +45,6 @@ const SKILL_ALIASES: Record<string, string> = {
   ".net": ".NET",
   "ruby": "Ruby on Rails",
   "rails": "Ruby on Rails",
-  // Office
   "excel": "Microsoft Excel",
   "ms excel": "Microsoft Excel",
   "outlook": "Microsoft Outlook",
@@ -50,12 +54,51 @@ const SKILL_ALIASES: Record<string, string> = {
   "google sheets": "Google Workspace",
   "gsuite": "Google Workspace",
   "g suite": "Google Workspace",
-  // Marketing
   "ga": "Google Analytics",
   "google ads": "SEA",
   "tag manager": "Google Tag Manager",
   "gtm": "Google Tag Manager",
-  // Domain hints handled separately
+};
+
+const SOFT_SKILL_ALIASES: Record<string, string> = {
+  "communication": "Communication",
+  "communiquer": "Communication",
+  "bon communicant": "Communication",
+  "teamwork": "Travail en équipe",
+  "travail en equipe": "Travail en équipe",
+  "esprit d'equipe": "Travail en équipe",
+  "esprit d equipe": "Travail en équipe",
+  "autonome": "Autonomie",
+  "autonomie": "Autonomie",
+  "proactif": "Proactivité",
+  "proactive": "Proactivité",
+  "proactivite": "Proactivité",
+  "organise": "Organisation",
+  "organisation": "Organisation",
+  "adaptable": "Adaptabilité",
+  "adaptabilite": "Adaptabilité",
+  "flexible": "Adaptabilité",
+  "gestion du temps": "Gestion du temps",
+  "time management": "Gestion du temps",
+  "analytique": "Esprit analytique",
+  "esprit analytique": "Esprit analytique",
+  "analytical": "Esprit analytique",
+  "resolution de problemes": "Résolution de problèmes",
+  "problem solving": "Résolution de problèmes",
+  "creatif": "Créativité",
+  "creative": "Créativité",
+  "creativite": "Créativité",
+  "leader": "Leadership",
+  "leadership": "Leadership",
+  "rigoureux": "Rigueur",
+  "rigueur": "Rigueur",
+  "rigorous": "Rigueur",
+  "sens du detail": "Sens du détail",
+  "detail oriented": "Sens du détail",
+  "esprit critique": "Esprit critique",
+  "critical thinking": "Esprit critique",
+  "orientation resultats": "Orientation résultats",
+  "results oriented": "Orientation résultats",
 };
 
 const DOMAIN_ALIASES: Record<string, string> = {
@@ -99,16 +142,13 @@ function normalize(s: string): string {
 function matchDomain(raw: string): string {
   const n = normalize(raw);
   if (!n) return "";
-  // Exact match against catalog
   for (const d of DOMAINS) {
     if (normalize(d) === n) return d;
   }
-  // Alias
   if (DOMAIN_ALIASES[n]) return DOMAIN_ALIASES[n];
   for (const [alias, d] of Object.entries(DOMAIN_ALIASES)) {
     if (n.includes(alias) || alias.includes(n)) return d;
   }
-  // Includes
   for (const d of DOMAINS) {
     const nd = normalize(d);
     if (nd.includes(n) || n.includes(nd)) return d;
@@ -116,22 +156,21 @@ function matchDomain(raw: string): string {
   return "";
 }
 
-function matchSkill(raw: string, catalog: string[]): string | null {
+function matchInCatalog(raw: string, catalog: string[], aliases: Record<string, string>): string | null {
   const n = normalize(raw);
   if (!n) return null;
-  // Exact normalized
   for (const c of catalog) {
     if (normalize(c) === n) return c;
   }
-  // Alias map
-  if (SKILL_ALIASES[n]) {
-    const target = SKILL_ALIASES[n];
+  if (aliases[n]) {
+    const target = aliases[n];
     if (catalog.includes(target)) return target;
   }
-  // Partial includes
   for (const c of catalog) {
     const nc = normalize(c);
-    if (nc.includes(n) || n.includes(nc)) return c;
+    if (nc === n) return c;
+    if (nc.includes(n) && n.length >= 3) return c;
+    if (n.includes(nc) && nc.length >= 3) return c;
   }
   return null;
 }
@@ -141,16 +180,20 @@ const SYSTEM_PROMPT = `Tu es un assistant de recrutement. Analyse la description
 Domaines disponibles (choisis exactement UN parmi cette liste) :
 ${DOMAINS.map((d) => `- ${d}`).join("\n")}
 
-Hard skills disponibles par domaine (choisis UNIQUEMENT des skills du domaine sélectionné) :
+Hard skills disponibles par domaine (tu DOIS choisir UNIQUEMENT des skills du domaine sélectionné, à l'identique) :
 ${Object.entries(HARD_SKILLS_MAP)
   .map(([d, skills]) => `${d}: ${skills.join(", ")}`)
   .join("\n")}
 
-Règles :
+Soft skills disponibles (liste FERMÉE, choisis UNIQUEMENT parmi celle-ci, à l'identique) :
+${SOFT_SKILLS.join(", ")}
+
+RÈGLES STRICTES :
 - domain : DOIT être un des 6 domaines listés ci-dessus, à l'identique (avec accents et casse).
-- hardSkills : tableau de skills issus EXCLUSIVEMENT du catalogue du domaine choisi, à l'identique.
-- Si la description mentionne une techno absente du catalogue (ex: TypeScript, Figma), ne la mets PAS dans hardSkills.
-- softSkills : compétences comportementales libres (ex: Communication, Autonomie).
+- hardSkills : tableau de skills issus EXCLUSIVEMENT du catalogue du domaine choisi, à l'identique. INTERDIT d'inventer ou paraphraser un skill. Si un besoin exprimé n'a pas d'équivalent dans la liste (ex: "cold calling", "prospection", "TypeScript", "Figma"), NE LE METS PAS — laisse-le de côté, l'utilisateur l'ajoutera lui-même.
+- softSkills : tableau strictement issu de la liste fermée des soft skills ci-dessus, à l'identique. INTERDIT d'inventer.
+- Un savoir-faire technique, un outil, une méthode commerciale ou métier (ex: cold calling, prospection, négociation, comptabilité, design) n'est JAMAIS un soft skill. Les soft skills sont uniquement des traits comportementaux génériques.
+- Si tu hésites pour un item, NE LE METS PAS plutôt que de le mettre au mauvais endroit ou de l'inventer.
 - talentType : "Étudiant" si stage/job étudiant/temps partiel, "Jeune diplômé" si poste à temps plein/CDI/après diplôme.
 - diplome : "Bachelier", "Master" ou null si non précisé.`;
 
@@ -198,8 +241,14 @@ Deno.serve(async (req) => {
                 type: "object",
                 properties: {
                   domain: { type: "string", enum: [...DOMAINS] },
-                  hardSkills: { type: "array", items: { type: "string" } },
-                  softSkills: { type: "array", items: { type: "string" } },
+                  hardSkills: {
+                    type: "array",
+                    items: { type: "string", enum: ALL_HARD_SKILLS },
+                  },
+                  softSkills: {
+                    type: "array",
+                    items: { type: "string", enum: [...SOFT_SKILLS] },
+                  },
                   talentType: { type: "string", enum: ["Étudiant", "Jeune diplômé"] },
                   diplome: { type: ["string", "null"], enum: ["Bachelier", "Master", null] },
                 },
@@ -245,31 +294,37 @@ Deno.serve(async (req) => {
 
     const parsed = JSON.parse(toolCall.function.arguments);
 
-    // Map talentType
     const talentTypeInternal = parsed.talentType === "Jeune diplômé" ? "graduate" : "student";
-
-    // Match domain robustly
     const domain = matchDomain(String(parsed.domain || ""));
 
-    // Match hard skills against the catalog of the matched domain
-    const catalog = domain ? HARD_SKILLS_MAP[domain] || [] : [];
+    // Filter hard skills strictly against the catalog of the matched domain.
+    const hardCatalog = domain ? HARD_SKILLS_MAP[domain] || [] : [];
     const matchedHardSkills: string[] = [];
-    const customHardSkills: string[] = [];
-    const seen = new Set<string>();
+    const seenHard = new Set<string>();
 
-    if (Array.isArray(parsed.hardSkills)) {
+    if (Array.isArray(parsed.hardSkills) && hardCatalog.length > 0) {
       for (const raw of parsed.hardSkills) {
         if (typeof raw !== "string") continue;
-        const m = catalog.length ? matchSkill(raw, catalog) : null;
-        if (m && !seen.has(m)) {
+        const m = matchInCatalog(raw, hardCatalog, SKILL_ALIASES);
+        if (m && !seenHard.has(m)) {
           matchedHardSkills.push(m);
-          seen.add(m);
-        } else if (!m) {
-          const key = normalize(raw);
-          if (key && !seen.has(key)) {
-            customHardSkills.push(raw);
-            seen.add(key);
-          }
+          seenHard.add(m);
+        }
+      }
+    }
+
+    // Filter soft skills strictly against the closed soft skills catalog.
+    const softCatalog = [...SOFT_SKILLS];
+    const matchedSoftSkills: string[] = [];
+    const seenSoft = new Set<string>();
+
+    if (Array.isArray(parsed.softSkills)) {
+      for (const raw of parsed.softSkills) {
+        if (typeof raw !== "string") continue;
+        const m = matchInCatalog(raw, softCatalog, SOFT_SKILL_ALIASES);
+        if (m && !seenSoft.has(m)) {
+          matchedSoftSkills.push(m);
+          seenSoft.add(m);
         }
       }
     }
@@ -278,8 +333,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         domain,
         hardSkills: matchedHardSkills,
-        customHardSkills,
-        softSkills: Array.isArray(parsed.softSkills) ? parsed.softSkills : [],
+        softSkills: matchedSoftSkills,
         talentType: talentTypeInternal,
         diplome: parsed.diplome ?? null,
       }),
