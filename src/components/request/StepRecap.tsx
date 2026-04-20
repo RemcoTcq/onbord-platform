@@ -37,6 +37,7 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
       title: data.title,
       description: data.description,
       domain: data.domain,
+      talent_type: data.talentType,
       skills: data.mustHaveSkills,
       nice_to_have_skills: data.niceToHaveSkills,
       soft_skills: data.mustHaveSoftSkills,
