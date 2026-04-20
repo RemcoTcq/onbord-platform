@@ -105,7 +105,12 @@ const Admin = () => {
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <CardTitle className="text-lg">{req.title}</CardTitle>
-                      <p className="text-sm text-muted-foreground">{req.domain} · {req.talents_number} talent(s)</p>
+                      <div className="flex items-center gap-2 mt-1 flex-wrap">
+                        <p className="text-sm text-muted-foreground">{req.domain} · {req.talents_number} talent(s)</p>
+                        <Badge variant="secondary" className="text-xs">
+                          {req.talent_type === "graduate" ? "Jeune diplômé" : "Étudiant"}
+                        </Badge>
+                      </div>
                       <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                         <Building2 className="h-3 w-3" />
                         <span>{getProfileLabel(req.user_id)}</span>
