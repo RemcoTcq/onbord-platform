@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { RequestFormData } from "@/lib/request-types";
 import { HOURLY_RATE } from "@/lib/constants";
+import { calculatePricing } from "@/lib/pricing-utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Check, Users, Clock, CalendarDays, Euro, TrendingUp, Sparkles, ArrowLeft, ArrowRight } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
@@ -15,15 +15,16 @@ interface Props {
 
 export const StepPricing = ({ data, onChange, onNext, onBack }: Props) => {
   const pricing = useMemo(() => {
-    const halfDays = data.scheduleType === "fixed"
-      ? Object.values(data.scheduleDetails).reduce((sum, slots) => sum + slots.length, 0)
-      : data.daysPerWeek * 2;
-    const weeklyHours = halfDays * 4 * data.talentsNumber;
-    const weeklyPrice = weeklyHours * HOURLY_RATE;
-    const monthlyPrice = weeklyPrice * 4;
-    const dailyRate = HOURLY_RATE * 8;
-    return { halfDays, weeklyHours, weeklyPrice, monthlyPrice, dailyRate };
-  }, [data.scheduleType, data.scheduleDetails, data.daysPerWeek, data.talentsNumber]);
+    const p = calculatePricing({
+      scheduleType: data.scheduleType,
+      scheduleDetails: data.scheduleDetails,
+      daysPerWeek: data.daysPerWeek,
+      talentsNumber: data.talentsNumber,
+      talentType: data.talentType,
+      employmentType: data.employmentType,
+    });
+    return { ...p, dailyRate: HOURLY_RATE * 8 };
+  }, [data.scheduleType, data.scheduleDetails, data.daysPerWeek, data.talentsNumber, data.talentType, data.employmentType]);
 
   const handleNext = () => {
     onChange({ weeklyHours: pricing.weeklyHours, weeklyPrice: pricing.weeklyPrice, monthlyPrice: pricing.monthlyPrice });
@@ -32,9 +33,16 @@ export const StepPricing = ({ data, onChange, onNext, onBack }: Props) => {
 
   const includes = ["Matching profils", "Screening", "Gestion administrative", "Contrat", "Support dédié", "Suivi de mission"];
 
+  const displayDays =
+    data.talentType === "graduate"
+      ? data.employmentType === "full_time"
+        ? 5
+        : data.daysPerWeek
+      : data.daysPerWeek;
+
   const stats = [
     { icon: Users, label: "Talents", value: data.talentsNumber.toString() },
-    { icon: CalendarDays, label: "Jours / sem.", value: data.daysPerWeek.toString() },
+    { icon: CalendarDays, label: "Jours / sem.", value: displayDays.toString() },
     { icon: Clock, label: "Heures / sem.", value: `${pricing.weeklyHours}h` },
     { icon: Euro, label: "Taux jour.", value: `${pricing.dailyRate}€` },
   ];
@@ -46,7 +54,6 @@ export const StepPricing = ({ data, onChange, onNext, onBack }: Props) => {
         <p className="text-sm text-card-foreground/60">Estimation basée sur vos critères</p>
       </div>
 
-      {/* Price cards */}
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="gradient-primary rounded-xl p-6 text-primary-foreground relative overflow-hidden">
           <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-primary-foreground/10" />
@@ -65,7 +72,6 @@ export const StepPricing = ({ data, onChange, onNext, onBack }: Props) => {
         </div>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map(({ icon: Icon, label, value }) => (
           <div key={label} className="rounded-xl border border-card-foreground/10 p-4 text-center">
@@ -78,7 +84,6 @@ export const StepPricing = ({ data, onChange, onNext, onBack }: Props) => {
         ))}
       </div>
 
-      {/* Breakdown */}
       <div className="rounded-xl border border-card-foreground/10 p-6 space-y-3">
         <div className="flex items-center justify-between text-sm">
           <span className="text-card-foreground/60">Taux horaire</span>
@@ -106,7 +111,6 @@ export const StepPricing = ({ data, onChange, onNext, onBack }: Props) => {
         </div>
       </div>
 
-      {/* Includes */}
       <div className="rounded-xl bg-primary/5 p-6">
         <div className="mb-3 flex items-center gap-2">
           <Sparkles className="h-5 w-5 text-primary" />

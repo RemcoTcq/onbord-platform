@@ -2,7 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { RequestFormData } from "@/lib/request-types";
-import { HOURLY_RATE } from "@/lib/constants";
+import { calculatePricing } from "@/lib/pricing-utils";
 import { TalentTypeBadge } from "@/components/TalentTypeBadge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,18 +23,20 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
 
-  const halfDays = data.scheduleType === "fixed"
-    ? Object.values(data.scheduleDetails).reduce((sum, slots) => sum + slots.length, 0)
-    : data.daysPerWeek * 2;
-  const weeklyHours = halfDays * 4 * data.talentsNumber;
-  const weeklyPrice = weeklyHours * HOURLY_RATE;
-  const monthlyPrice = weeklyPrice * 4;
+  const { weeklyHours, weeklyPrice, monthlyPrice } = calculatePricing({
+    scheduleType: data.scheduleType,
+    scheduleDetails: data.scheduleDetails,
+    daysPerWeek: data.daysPerWeek,
+    talentsNumber: data.talentsNumber,
+    talentType: data.talentType,
+    employmentType: data.employmentType,
+  });
 
   const handleSubmit = async () => {
     if (!user) return;
     setLoading(true);
 
-    const payload = {
+    const payload: any = {
       user_id: user.id,
       title: data.title,
       description: data.description,
@@ -56,6 +58,8 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
       weekly_price: weeklyPrice,
       monthly_price: monthlyPrice,
       status: "Demande validée",
+      natural_language_query: data.naturalLanguageQuery || null,
+      employment_type: data.employmentType || null,
     };
 
     let id = draftId;
@@ -84,6 +88,16 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
     </div>
   );
 
+  // Schedule label
+  let scheduleLabel = "";
+  if (data.talentType === "graduate") {
+    if (data.employmentType === "full_time") scheduleLabel = "Temps plein (5 jours)";
+    else if (data.employmentType === "part_time") scheduleLabel = `Temps partiel (${data.daysPerWeek} jours)`;
+    else scheduleLabel = "Non défini";
+  } else {
+    scheduleLabel = data.scheduleType === "flexible" ? "Flexibles" : "Fixes";
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -99,7 +113,7 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
         </div>
       </div>
 
-      <Section title="Profil recherché" stepIdx={0}>
+      <Section title="Profil recherché" stepIdx={1}>
         <div className="space-y-3">
           <div className="flex justify-between text-sm">
             <span className="text-card-foreground/60">Domaine</span>
@@ -145,8 +159,10 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
           <div className="flex justify-between"><span className="text-card-foreground/60">Titre</span><span className="text-card-foreground font-medium">{data.title}</span></div>
           <div className="flex justify-between"><span className="text-card-foreground/60">Description</span><span className="text-card-foreground text-right max-w-[60%]">{data.description}</span></div>
           <div className="flex justify-between"><span className="text-card-foreground/60">Talents</span><span className="text-card-foreground">{data.talentsNumber}</span></div>
-          <div className="flex justify-between"><span className="text-card-foreground/60">Jours/semaine</span><span className="text-card-foreground">{data.daysPerWeek}</span></div>
-          <div className="flex justify-between"><span className="text-card-foreground/60">Horaires</span><span className="text-card-foreground">{data.scheduleType === "flexible" ? "Flexibles" : "Fixes"}</span></div>
+          {data.talentType === "student" && (
+            <div className="flex justify-between"><span className="text-card-foreground/60">Jours/semaine</span><span className="text-card-foreground">{data.daysPerWeek}</span></div>
+          )}
+          <div className="flex justify-between"><span className="text-card-foreground/60">{data.talentType === "graduate" ? "Contrat" : "Horaires"}</span><span className="text-card-foreground">{scheduleLabel}</span></div>
           <div className="flex justify-between"><span className="text-card-foreground/60">Mode</span><span className="text-card-foreground capitalize">{data.workMode}</span></div>
         </div>
       </Section>
