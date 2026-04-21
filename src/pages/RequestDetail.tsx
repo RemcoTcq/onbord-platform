@@ -219,46 +219,25 @@ const RequestDetail = () => {
           </CardContent>
         </Card>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          {/* Job details */}
-          <Card>
-            <CardContent className="p-6 space-y-3">
-              <h3 className="text-lg font-semibold text-card-foreground">Détails du poste</h3>
-              {[
-                ["Description", request.description],
-                ["Talents", request.talents_number],
-                ["Jours/semaine", request.days_per_week],
-                ["Horaires", request.schedule_type === "flexible" ? "Flexibles" : "Fixes"],
-                ["Mode", request.work_mode],
-                ["Diplôme", request.diploma || "-"],
-              ].map(([label, val]) => (
-                <div key={String(label)} className="flex justify-between text-sm">
-                  <span className="text-card-foreground/60">{label}</span>
-                  <span className="text-card-foreground capitalize">{String(val)}</span>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          {/* Pricing */}
-          <Card>
-            <CardContent className="p-6 space-y-3">
-              <h3 className="text-lg font-semibold text-card-foreground">Tarification</h3>
-              <div className="flex justify-between text-sm">
-                <span className="text-card-foreground/60">Heures/semaine</span>
-                <span className="text-card-foreground">{Number(request.weekly_hours)}h</span>
+        {/* Job details */}
+        <Card>
+          <CardContent className="p-6 space-y-3">
+            <h3 className="text-lg font-semibold text-card-foreground">Détails du poste</h3>
+            {[
+              ["Description", request.description],
+              ["Talents", request.talents_number],
+              ["Jours/semaine", request.days_per_week],
+              ["Horaires", request.schedule_type === "flexible" ? "Flexibles" : "Fixes"],
+              ["Mode", request.work_mode],
+              ["Diplôme", request.diploma || "-"],
+            ].map(([label, val]) => (
+              <div key={String(label)} className="flex justify-between text-sm">
+                <span className="text-card-foreground/60">{label}</span>
+                <span className="text-card-foreground capitalize">{String(val)}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-card-foreground/60">Prix/semaine</span>
-                <span className="font-semibold text-card-foreground">{Number(request.weekly_price).toLocaleString("fr-FR")}€</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-card-foreground/60">Prix/mois</span>
-                <span className="font-bold text-primary">{Number(request.monthly_price).toLocaleString("fr-FR")}€</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            ))}
+          </CardContent>
+        </Card>
 
         {/* Skills */}
         <Card>
