@@ -2,11 +2,23 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProfile } from "@/contexts/ProfileContext";
 import { AppLayout } from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Search, Users, Rocket, FileText, Clock, Send } from "lucide-react";
+import {
+  ArrowRight,
+  FileText,
+  Send,
+  Clock,
+  Users,
+  Briefcase,
+  Sparkles,
+  UserCheck,
+  FileSignature,
+  CreditCard,
+  Check,
+} from "lucide-react";
 
 interface RequestSummary {
   id: string;
@@ -15,160 +27,214 @@ interface RequestSummary {
   created_at: string;
 }
 
+const PROGRESS_STEPS = [
+  { key: "Demande reçue", label: "Demande reçue" },
+  { key: "Matching en cours", label: "Matching en cours" },
+  { key: "Profils envoyés", label: "Profils envoyés" },
+  { key: "Contrat signé", label: "Contrat signé" },
+];
+
+const getStepIndex = (status: string): number => {
+  const normalized = status?.toLowerCase() ?? "";
+  if (normalized.includes("contrat")) return 3;
+  if (normalized.includes("profil")) return 2;
+  if (normalized.includes("matching")) return 1;
+  return 0;
+};
+
 const Home = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState({ active: 0, drafts: 0, total: 0 });
-  const [recent, setRecent] = useState<RequestSummary[]>([]);
+  const { profile } = useProfile();
+  const [stats, setStats] = useState({ total: 0, active: 0, drafts: 0, talents: 0 });
+  const [latest, setLatest] = useState<RequestSummary | null>(null);
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
       const { data } = await supabase
         .from("requests")
-        .select("id, title, status, created_at")
+        .select("id, title, status, created_at, talents_number")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(5);
+        .order("created_at", { ascending: false });
 
       const all = data || [];
-      setRecent(all.filter((r) => r.status !== "draft").slice(0, 3));
+      const submitted = all.filter((r) => r.status !== "draft");
+      const active = submitted.filter((r) => r.status !== "Mission lancée" && r.status !== "Contrat signé");
+      const talents = submitted.reduce((sum, r: any) => sum + (r.talents_number || 0), 0);
+
       setStats({
-        active: all.filter((r) => r.status !== "draft" && r.status !== "Mission lancée").length,
+        total: submitted.length,
+        active: active.length,
         drafts: all.filter((r) => r.status === "draft").length,
-        total: all.filter((r) => r.status !== "draft").length,
+        talents,
       });
+      setLatest(active[0] || submitted[0] || null);
     };
     load();
   }, [user]);
 
-  const steps = [
-    { icon: FileText, title: "Décrivez votre besoin", desc: "Remplissez le formulaire avec les compétences et détails recherchés" },
-    { icon: Search, title: "On trouve les profils", desc: "Notre équipe identifie les meilleurs talents pour vous" },
-    { icon: Rocket, title: "Vous lancez la mission", desc: "Validez les profils et démarrez la collaboration" },
+  const firstName = profile?.first_name?.trim() || "";
+
+  const metrics = [
+    { icon: FileText, label: "Total demandes", value: stats.total },
+    { icon: Send, label: "Demandes actives", value: stats.active },
+    { icon: Clock, label: "Brouillons", value: stats.drafts },
+    { icon: Users, label: "Talents reçus", value: stats.talents },
   ];
+
+  const steps = [
+    { icon: Briefcase, title: "L'entreprise publie un poste", desc: "Vous décrivez votre besoin en quelques minutes." },
+    { icon: Sparkles, title: "Onbord présente les meilleurs matchs", desc: "Notre équipe sélectionne les profils les plus pertinents." },
+    { icon: UserCheck, title: "Votre équipe RH sélectionne les profils", desc: "Vous validez les candidats qui vous correspondent." },
+    { icon: FileSignature, title: "Le contrat est signé", desc: "Nous gérons toute la partie administrative." },
+    { icon: CreditCard, title: "Paiement uniquement si recrutement finalisé", desc: "Aucun frais tant que la mission n'est pas lancée." },
+  ];
+
+  const currentStep = latest ? getStepIndex(latest.status) : 0;
 
   return (
     <AppLayout>
       <div className="mx-auto max-w-5xl space-y-6">
-        {/* Hero */}
-        <Card className="overflow-hidden">
-          <CardContent className="p-8 lg:p-10">
-            <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-              <Rocket className="h-5 w-5" />
-            </div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
-              Recrutez les talents de demain,<br />dès aujourd'hui
-            </h1>
-            <p className="mt-3 max-w-xl text-muted-foreground text-[15px]">
-              Onbord vous connecte aux meilleurs profils pour vos missions, en quelques clics.
-            </p>
-            <Link to="/request/new">
-              <Button size="lg" className="mt-6 gap-2">
-                Créer une demande
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        {/* Welcome */}
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
+            Bonjour {firstName} <span className="inline-block">👋</span>
+          </h1>
+          <p className="mt-1 text-[14px] text-muted-foreground">
+            Voici un aperçu de votre activité de recrutement.
+          </p>
+        </div>
 
-        {/* 3 Steps */}
+        {/* Metrics */}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {metrics.map((m) => (
+            <Card key={m.label} className="card-hover">
+              <CardContent className="flex items-center gap-4 p-5">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                  <m.icon className="h-5 w-5 text-foreground" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold text-card-foreground">{m.value}</p>
+                  <p className="text-[13px] text-muted-foreground">{m.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Latest request with progress */}
+        {latest && (
+          <Card className="overflow-hidden">
+            <CardContent className="p-6 lg:p-7">
+              <div className="mb-5 flex items-start justify-between gap-4">
+                <div>
+                  <div className="section-title mb-1">Dernière demande en cours</div>
+                  <h2 className="text-lg font-semibold text-card-foreground">{latest.title}</h2>
+                  <p className="mt-1 text-[13px] text-muted-foreground">
+                    Créée le {new Date(latest.created_at).toLocaleDateString("fr-FR")}
+                  </p>
+                </div>
+                <Link to={`/request/${latest.id}`}>
+                  <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
+                    Voir les détails
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </Link>
+              </div>
+
+              {/* Progress bar */}
+              <div className="relative pt-2">
+                <div className="absolute left-0 right-0 top-[calc(0.5rem+0.875rem)] h-0.5 bg-muted" />
+                <div
+                  className="absolute left-0 top-[calc(0.5rem+0.875rem)] h-0.5 bg-primary transition-all duration-500"
+                  style={{
+                    width:
+                      PROGRESS_STEPS.length > 1
+                        ? `${(currentStep / (PROGRESS_STEPS.length - 1)) * 100}%`
+                        : "0%",
+                  }}
+                />
+                <div className="relative grid grid-cols-4 gap-2">
+                  {PROGRESS_STEPS.map((step, i) => {
+                    const done = i < currentStep;
+                    const current = i === currentStep;
+                    return (
+                      <div key={step.key} className="flex flex-col items-center text-center">
+                        <div
+                          className={`flex h-7 w-7 items-center justify-center rounded-full border-2 bg-card transition-all ${
+                            done
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : current
+                              ? "border-primary text-primary"
+                              : "border-border text-muted-foreground"
+                          }`}
+                        >
+                          {done ? (
+                            <Check className="h-3.5 w-3.5" />
+                          ) : (
+                            <span className="text-[11px] font-semibold">{i + 1}</span>
+                          )}
+                        </div>
+                        <span
+                          className={`mt-2 text-[11px] font-medium leading-tight ${
+                            current || done ? "text-foreground" : "text-muted-foreground"
+                          }`}
+                        >
+                          {step.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* How it works */}
         <div>
           <h2 className="section-title mb-4">Comment ça marche</h2>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
             {steps.map((step, i) => (
               <Card key={i} className="card-hover">
                 <CardContent className="p-5">
-                  <div className="mb-4 flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
                     <step.icon className="h-4 w-4 text-foreground" />
                   </div>
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">Étape {i + 1}</div>
-                  <h3 className="font-semibold text-card-foreground text-[15px]">{step.title}</h3>
-                  <p className="mt-1.5 text-[13px] text-muted-foreground leading-relaxed">{step.desc}</p>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                    Étape {i + 1}
+                  </div>
+                  <h3 className="text-[14px] font-semibold text-card-foreground leading-snug">
+                    {step.title}
+                  </h3>
+                  <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+                    {step.desc}
+                  </p>
                 </CardContent>
               </Card>
             ))}
           </div>
         </div>
 
-        {/* Video placeholder */}
+        {/* CTA */}
         <Card className="overflow-hidden">
-          <CardContent className="p-0">
-            <div className="flex items-center justify-center bg-muted/40 h-64 lg:h-72">
-              <div className="text-center">
-                <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-                  <Rocket className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <p className="text-[13px] font-medium text-muted-foreground">Vidéo de présentation</p>
-              </div>
+          <CardContent className="flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-7">
+            <div>
+              <h3 className="text-lg font-semibold text-card-foreground">
+                Prêt à recruter votre prochain talent ?
+              </h3>
+              <p className="mt-1 text-[13px] text-muted-foreground">
+                Décrivez votre besoin, on s'occupe du reste.
+              </p>
             </div>
+            <Link to="/request/new">
+              <Button size="lg" className="gap-2">
+                Créer une nouvelle demande
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </CardContent>
         </Card>
-
-        {/* Stats + Recent */}
-        <div className="grid gap-4 lg:grid-cols-3">
-          <Card className="card-hover">
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                <Send className="h-5 w-5 text-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-card-foreground">{stats.active}</p>
-                <p className="text-[13px] text-muted-foreground">Demandes en cours</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="card-hover">
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                <Clock className="h-5 w-5 text-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-card-foreground">{stats.drafts}</p>
-                <p className="text-[13px] text-muted-foreground">Brouillons</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="card-hover">
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                <Users className="h-5 w-5 text-foreground" />
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-card-foreground">{stats.total}</p>
-                <p className="text-[13px] text-muted-foreground">Total demandes</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Recent requests */}
-        {recent.length > 0 && (
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="section-title">Dernières demandes</h2>
-              <Link to="/requests">
-                <Button variant="ghost" size="sm" className="gap-1 text-muted-foreground hover:text-foreground">
-                  Voir tout <ArrowRight className="h-3 w-3" />
-                </Button>
-              </Link>
-            </div>
-            <div className="grid gap-3">
-              {recent.map((r) => (
-                <Link key={r.id} to={`/request/${r.id}`}>
-                  <Card className="card-hover">
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div>
-                        <p className="font-medium text-card-foreground text-[14px]">{r.title}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(r.created_at).toLocaleDateString("fr-FR")}</p>
-                      </div>
-                      <Badge variant="secondary">{r.status}</Badge>
-                    </CardContent>
-                  </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </AppLayout>
   );
