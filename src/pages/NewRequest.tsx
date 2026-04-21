@@ -12,7 +12,7 @@ import { StepConfirmation } from "@/components/request/StepConfirmation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Check, Save } from "lucide-react";
 
-const steps = ["Recherche IA", "Formulaire", "Tarif", "Récap"];
+const steps = ["Recherche IA", "Formulaire", "Récap"];
 
 const NewRequest = () => {
   const { user } = useAuth();
@@ -176,11 +176,10 @@ const NewRequest = () => {
           <CardContent className="p-6 lg:p-8">
             {step === 0 && <StepNaturalLanguage data={data} onChange={handleChange} onNext={() => setStep(1)} />}
             {step === 1 && <StepProfileAndJob data={data} onChange={handleChange} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
-            {step === 2 && <StepPricing data={data} onChange={handleChange} onNext={() => setStep(3)} onBack={() => setStep(1)} />}
-            {step === 3 && (
+            {step === 2 && (
               <StepRecap
                 data={data}
-                onBack={() => setStep(2)}
+                onBack={() => setStep(1)}
                 onEdit={setStep}
                 draftId={draftId}
                 onSubmitted={(id) => { setSubmittedId(id); setSubmitted(true); }}

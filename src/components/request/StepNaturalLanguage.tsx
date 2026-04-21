@@ -58,6 +58,10 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
         update.niceToHaveSoftSkills = [];
       }
       if (result.diplome) update.diploma = result.diplome;
+      if (result.jobTitle) update.title = result.jobTitle;
+      if (Array.isArray(result.langues) && result.langues.length > 0) {
+        update.languages = result.langues;
+      }
 
       onChange(update);
       toast.success("Profil pré-rempli ! Vous pouvez l'affiner à l'étape suivante.");
