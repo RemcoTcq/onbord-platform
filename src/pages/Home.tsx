@@ -20,6 +20,8 @@ import {
   Check,
 } from "lucide-react";
 
+import { STATUSES } from "@/lib/constants";
+
 interface RequestSummary {
   id: string;
   title: string;
@@ -27,19 +29,11 @@ interface RequestSummary {
   created_at: string;
 }
 
-const PROGRESS_STEPS = [
-  { key: "Demande reçue", label: "Demande reçue" },
-  { key: "Matching en cours", label: "Matching en cours" },
-  { key: "Profils envoyés", label: "Profils envoyés" },
-  { key: "Contrat signé", label: "Contrat signé" },
-];
+const PROGRESS_STEPS = STATUSES.map((s) => ({ key: s, label: s }));
 
 const getStepIndex = (status: string): number => {
-  const normalized = status?.toLowerCase() ?? "";
-  if (normalized.includes("contrat")) return 3;
-  if (normalized.includes("profil")) return 2;
-  if (normalized.includes("matching")) return 1;
-  return 0;
+  const idx = STATUSES.indexOf(status as any);
+  return idx >= 0 ? idx : 0;
 };
 
 const Home = () => {
@@ -59,8 +53,9 @@ const Home = () => {
 
       const all = data || [];
       const submitted = all.filter((r) => r.status !== "draft");
-      const active = submitted.filter((r) => r.status !== "Mission lancée" && r.status !== "Contrat signé");
-      const talents = submitted.reduce((sum, r: any) => sum + (r.talents_number || 0), 0);
+      const finalized = submitted.filter((r) => r.status === "Recrutement finalisé");
+      const active = submitted.filter((r) => r.status !== "Recrutement finalisé");
+      const talents = finalized.reduce((sum, r: any) => sum + (r.talents_number || 0), 0);
 
       setStats({
         total: submitted.length,
@@ -154,7 +149,7 @@ const Home = () => {
                         : "0%",
                   }}
                 />
-                <div className="relative grid grid-cols-4 gap-2">
+                <div className="relative grid grid-cols-5 gap-2">
                   {PROGRESS_STEPS.map((step, i) => {
                     const done = i < currentStep;
                     const current = i === currentStep;
