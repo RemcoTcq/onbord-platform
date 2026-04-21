@@ -175,6 +175,8 @@ function matchInCatalog(raw: string, catalog: string[], aliases: Record<string, 
   return null;
 }
 
+const ALLOWED_LANGUAGES = ["Français", "Anglais", "Néerlandais"] as const;
+
 const SYSTEM_PROMPT = `Tu es un assistant de recrutement. Analyse la description donnée et retourne uniquement un JSON structuré via la fonction extract_profile.
 
 Domaines disponibles (choisis exactement UN parmi cette liste) :
@@ -188,6 +190,9 @@ ${Object.entries(HARD_SKILLS_MAP)
 Soft skills disponibles (liste FERMÉE, choisis UNIQUEMENT parmi celle-ci, à l'identique) :
 ${SOFT_SKILLS.join(", ")}
 
+Langues autorisées (liste FERMÉE, choisis UNIQUEMENT parmi celle-ci, à l'identique) :
+${ALLOWED_LANGUAGES.join(", ")}
+
 RÈGLES STRICTES :
 - domain : DOIT être un des 6 domaines listés ci-dessus, à l'identique (avec accents et casse).
 - hardSkills : tableau de skills issus EXCLUSIVEMENT du catalogue du domaine choisi, à l'identique. INTERDIT d'inventer ou paraphraser un skill. Si un besoin exprimé n'a pas d'équivalent dans la liste (ex: "cold calling", "prospection", "TypeScript", "Figma"), NE LE METS PAS — laisse-le de côté, l'utilisateur l'ajoutera lui-même.
@@ -195,7 +200,9 @@ RÈGLES STRICTES :
 - Un savoir-faire technique, un outil, une méthode commerciale ou métier (ex: cold calling, prospection, négociation, comptabilité, design) n'est JAMAIS un soft skill. Les soft skills sont uniquement des traits comportementaux génériques.
 - Si tu hésites pour un item, NE LE METS PAS plutôt que de le mettre au mauvais endroit ou de l'inventer.
 - talentType : "Étudiant" si stage/job étudiant/temps partiel, "Jeune diplômé" si poste à temps plein/CDI/après diplôme.
-- diplome : "Bachelier", "Master" ou null si non précisé.`;
+- diplome : "Bachelier", "Master" ou null si non précisé.
+- langues : sous-ensemble strict de ["Français", "Anglais", "Néerlandais"]. Inclure uniquement les langues explicitement ou implicitement requises dans la description. Si aucune langue n'est mentionnée, retourner [].
+- jobTitle : titre court et concis du poste en français (max 6 mots), sans ponctuation finale (ex: "Développeur React", "Comptable junior", "Assistant marketing"). Toujours fournir un titre.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -251,8 +258,13 @@ Deno.serve(async (req) => {
                   },
                   talentType: { type: "string", enum: ["Étudiant", "Jeune diplômé"] },
                   diplome: { type: ["string", "null"], enum: ["Bachelier", "Master", null] },
+                  langues: {
+                    type: "array",
+                    items: { type: "string", enum: [...ALLOWED_LANGUAGES] },
+                  },
+                  jobTitle: { type: "string" },
                 },
-                required: ["domain", "hardSkills", "softSkills", "talentType", "diplome"],
+                required: ["domain", "hardSkills", "softSkills", "talentType", "diplome", "langues", "jobTitle"],
                 additionalProperties: false,
               },
             },
@@ -329,6 +341,25 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Filter languages strictly against the allowed list and shape as { name, level }.
+    const allowedLangSet = new Map(
+      ALLOWED_LANGUAGES.map((l) => [normalize(l), l] as const),
+    );
+    const matchedLanguages: { name: string; level: number }[] = [];
+    const seenLang = new Set<string>();
+    if (Array.isArray(parsed.langues)) {
+      for (const raw of parsed.langues) {
+        if (typeof raw !== "string") continue;
+        const canonical = allowedLangSet.get(normalize(raw));
+        if (canonical && !seenLang.has(canonical)) {
+          matchedLanguages.push({ name: canonical, level: 3 });
+          seenLang.add(canonical);
+        }
+      }
+    }
+
+    const jobTitle = typeof parsed.jobTitle === "string" ? parsed.jobTitle.trim() : "";
+
     return new Response(
       JSON.stringify({
         domain,
@@ -336,6 +367,8 @@ Deno.serve(async (req) => {
         softSkills: matchedSoftSkills,
         talentType: talentTypeInternal,
         diplome: parsed.diplome ?? null,
+        langues: matchedLanguages,
+        jobTitle,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
