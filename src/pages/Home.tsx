@@ -149,7 +149,7 @@ const Home = () => {
                         : "0%",
                   }}
                 />
-                <div className="relative grid grid-cols-4 gap-2">
+                <div className="relative grid grid-cols-5 gap-2">
                   {PROGRESS_STEPS.map((step, i) => {
                     const done = i < currentStep;
                     const current = i === currentStep;
