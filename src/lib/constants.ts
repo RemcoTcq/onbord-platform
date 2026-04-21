@@ -21,10 +21,10 @@ export const DIPLOMAS = ["Bachelier", "Master", "Indifférent"] as const;
 
 export const STATUSES = [
   "Demande validée",
-  "Recherche des profils",
-  "Présentation des profils",
+  "Profils en cours de sélection",
+  "Profils envoyés",
   "Profils validés",
-  "Mission lancée",
+  "Recrutement finalisé",
 ] as const;
 
 export const DAYS = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi"] as const;
