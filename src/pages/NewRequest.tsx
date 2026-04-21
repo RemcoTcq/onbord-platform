@@ -7,7 +7,6 @@ import { RequestFormData, defaultFormData } from "@/lib/request-types";
 import { normalizeTalentType } from "@/lib/talent-type";
 import { StepNaturalLanguage } from "@/components/request/StepNaturalLanguage";
 import { StepProfileAndJob } from "@/components/request/StepProfileAndJob";
-import { StepPricing } from "@/components/request/StepPricing";
 import { StepRecap } from "@/components/request/StepRecap";
 import { StepConfirmation } from "@/components/request/StepConfirmation";
 import { Card, CardContent } from "@/components/ui/card";
