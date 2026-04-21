@@ -87,7 +87,7 @@ const Home = () => {
     { icon: Sparkles, title: "Onbord présente les meilleurs matchs", desc: "Notre équipe sélectionne les profils les plus pertinents." },
     { icon: UserCheck, title: "Votre équipe RH sélectionne les profils", desc: "Vous validez les candidats qui vous correspondent." },
     { icon: FileSignature, title: "Le contrat est signé", desc: "Nous gérons toute la partie administrative." },
-    { icon: CreditCard, title: "Paiement uniquement si recrutement finalisé", desc: "Aucun frais tant que la mission n'est pas lancée." },
+    { icon: CreditCard, title: "Paiement uniquement si recrutement finalisé", desc: "Aucun frais tant que le recrutement n'est pas finalisé." },
   ];
 
   const currentStep = latest ? getStepIndex(latest.status) : 0;
