@@ -52,6 +52,7 @@ const NewRequest = () => {
           scheduleType: row.schedule_type as "flexible" | "fixed",
           scheduleDetails: (row.schedule_details as any) || {},
           workMode: row.work_mode || "remote",
+          workLocation: (row as any).work_location || "",
           employmentType: ((row as any).employment_type as any) || null,
         });
         // Skip the AI step when editing an existing draft
@@ -84,6 +85,7 @@ const NewRequest = () => {
       schedule_type: data.scheduleType,
       schedule_details: data.scheduleDetails as any,
       work_mode: data.workMode,
+      work_location: data.workLocation || "",
       weekly_hours: 0,
       weekly_price: 0,
       monthly_price: 0,
