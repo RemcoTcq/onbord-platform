@@ -195,17 +195,17 @@ ${ALLOWED_LANGUAGES.join(", ")}
 
 RÈGLES STRICTES :
 - domain : DOIT être un des 6 domaines listés ci-dessus, à l'identique (avec accents et casse).
-- hardSkills : tableau de skills issus EXCLUSIVEMENT du catalogue du domaine choisi, à l'identique. INTERDIT d'inventer ou paraphraser un skill.
-- customHardSkills : tableau des hard skills / outils / technologies détectés dans la description mais ABSENTS du catalogue ci-dessus (ex: "TypeScript", "Figma", "Notion", "Kubernetes"). N'inclure ici que des compétences techniques/outils concrets, jamais des traits de personnalité.
-- softSkills : tableau strictement issu de la liste fermée des soft skills ci-dessus, à l'identique. INTERDIT d'inventer.
-- customSoftSkills : tableau de soft skills (traits comportementaux génériques) détectés mais ABSENTS de la liste fermée. Ne JAMAIS y mettre un savoir-faire technique, un outil, une méthode commerciale ou métier.
+- hardSkills : UNIQUEMENT des skills du catalogue du domaine choisi qui sont **EXPLICITEMENT mentionnés dans la description de l'utilisateur** (à l'identique ou via un alias évident, ex: "react" → "React.js"). INTERDIT de deviner, d'inférer ou de déduire un skill à partir du titre du poste, du domaine ou du contexte. Si l'utilisateur écrit juste "développeur" sans préciser de techno → renvoyer [].
+- customHardSkills : technologies/outils/logiciels concrets **EXPLICITEMENT écrits par l'utilisateur** mais ABSENTS du catalogue (ex: "TypeScript", "Figma", "Notion", "Kubernetes"). INTERDIT d'y mettre : un intitulé de métier ("développeur", "comptable", "ingénieur", "marketeur", "assistant", "manager", "consultant", "analyste", "commercial", "vendeur", "designer", "data scientist", etc.), un nom de domaine, un titre de poste. INTERDIT d'inférer à partir du titre. Si rien d'explicite → [].
+- softSkills : strictement issu de la liste fermée, et UNIQUEMENT si **explicitement mentionné** dans la description. Ne jamais inférer à partir d'un métier. Si rien → [].
+- customSoftSkills : traits comportementaux **explicitement mentionnés** mais hors liste fermée. JAMAIS de savoir-faire technique, d'outil, de méthode métier, ni d'intitulé de poste. Si rien → [].
 - Un savoir-faire technique, un outil, une méthode commerciale ou métier (ex: cold calling, prospection, négociation, comptabilité, design) n'est JAMAIS un soft skill.
 - talentType : "Étudiant" si stage/job étudiant/temps partiel, "Jeune diplômé" si poste à temps plein/CDI/après diplôme.
 - diplome : "Bachelier", "Master" ou null si non précisé.
-- langues : sous-ensemble strict de ["Français", "Anglais", "Néerlandais"]. Si aucune langue mentionnée, retourner [].
-- jobTitle : titre court et concis du poste en français (max 6 mots), sans ponctuation finale (ex: "Développeur React", "Comptable junior", "Assistant marketing"). Toujours fournir un titre.
+- langues : sous-ensemble strict de ["Français", "Anglais", "Néerlandais"], UNIQUEMENT si **explicitement mentionnées** (ex: "FR", "EN", "anglais", "français", "NL"). Ne jamais inférer. Si rien → [].
+- jobTitle : titre court et concis du poste en français (max 6 mots), sans ponctuation finale (ex: "Développeur React", "Comptable junior", "Assistant marketing"). Toujours fournir un titre dès qu'un métier est mentionné.
 - jobDescription : description courte et professionnelle du poste (2-3 phrases, ton recruteur, en français, max 350 caractères). Décris la mission générale, le contexte et l'impact attendu. Si la description fournie est trop pauvre, propose un texte plausible cohérent avec le titre et les skills.
-- location : ville, pays, ou adresse mentionnée dans la description (ex: "Bruxelles", "Paris", "Liège", "Lyon, France"). null si non mentionnée.`;
+- location : ville, pays, ou adresse **explicitement mentionnée** dans la description (ex: "Bruxelles", "Paris", "Liège", "Lyon, France"). null si non mentionnée — ne jamais inférer.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {

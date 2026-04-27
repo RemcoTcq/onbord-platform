@@ -1,118 +1,46 @@
-# Barre de recherche IA "JuiceBox", adresse de travail & lock demi-journées
 
-## 1. Barre de recherche intelligente (Step 0)
+# Fix : checkmark "Skills" trop permissif
 
-Refonte de `StepNaturalLanguage` en une **vraie search bar unique** :
+## Problème observé
 
-- Un seul champ texte large, style command palette.
-- **Debounce 700 ms** : dès que l'utilisateur arrête de taper (et que le texte fait > 15 caractères), on appelle automatiquement `generate-talent-profile` en arrière-plan (sans bloquer la frappe).
-- Affichage discret : spinner "Analyse…" pendant l'appel, sans toast.
-- Le résultat **n'écrit pas dans le formulaire** tant que l'utilisateur ne valide pas — il alimente uniquement les checkmarks (preview) et un état `lastDetection`.
+En tapant juste "développeur", le tag **Skills** passe au vert. Deux causes :
 
-### Tags de validation (checkmarks)
+1. **Côté edge function** : le system prompt n'interdit pas à l'IA d'inférer des skills à partir du titre du job. Quand on dit "développeur", l'IA peut deviner "JavaScript", "Python", ou pousser "développeur" lui-même dans `customHardSkills`.
+2. **Côté front** : la condition `ok` du tag Skills se déclenche dès qu'il y a **au moins 1 hard skill** (catalogue OU custom), sans distinguer ce qui a été réellement écrit par l'utilisateur.
 
-Sous la barre, 4 tags affichés en ligne :
+## Correctifs
 
-```text
-[✓ Titre]   [✓ Skills]   [○ Localisation]   [✓ Langues]
-```
+### 1. Edge function `generate-talent-profile` — durcir le prompt
 
-- Vert + Check si détecté, gris + cercle vide sinon.
-- Tooltip au survol = valeur détectée (ex. "Développeur React").
-- Bouton **"Continuer"** toujours actif (même si tout n'est pas vert) → applique `lastDetection` au form et passe à l'étape Formulaire.
-- Bouton **"Passer"** inchangé.
+Ajouter aux RÈGLES STRICTES :
 
-## 2. Extraction IA enrichie
+- `hardSkills` et `customHardSkills` doivent contenir **UNIQUEMENT** des technologies/outils/compétences techniques **explicitement écrits** dans la description de l'utilisateur. **INTERDIT** d'inférer un skill à partir du titre du poste (ex : "développeur" → JS/Python : interdit).
+- Ne JAMAIS mettre un intitulé de métier ("développeur", "comptable", "marketeur", "ingénieur"...) dans `customHardSkills`.
+- Si la description ne mentionne aucun outil/techno précis → renvoyer `hardSkills: []` et `customHardSkills: []`.
+- Idem pour `softSkills` / `customSoftSkills` : uniquement si explicitement mentionnés.
+- `langues` : uniquement si explicitement mentionnées (FR, EN, NL, "français", "anglais"...). Ne pas inférer.
+- `location` : uniquement si une ville/pays/adresse est explicitement mentionnée.
 
-Mise à jour de `supabase/functions/generate-talent-profile/index.ts` :
+### 2. Edge function — filtre serveur de sécurité
 
-Ajouter au schéma `extract_profile` :
+Côté serveur, après extraction, **filtrer `customHardSkills`** pour exclure tout terme qui ressemble à un intitulé de poste :
 
-- `location` (string|null) — adresse / ville / pays détectée librement.
-- `jobDescription` (string) — description courte du poste (2-3 phrases, ton recruteur).
-- `customHardSkills` (string[]) — hard skills détectés mais **absents** du catalogue (ex. "TypeScript", "Figma").
-- `customSoftSkills` (string[]) — idem pour soft skills hors liste fermée.
+- Liste noire de mots-clés métiers à rejeter (case-insensitive, normalisé) : `développeur`, `developer`, `dev`, `comptable`, `marketeur`, `ingénieur`, `engineer`, `assistant`, `manager`, `consultant`, `analyste`, `analyst`, `commercial`, `sales`, `vendeur`, `designer`, `chef de projet`, `product owner`, `scrum master`, `data scientist`, `data analyst`...
+- Si le terme custom == jobTitle (normalisé, ou contenu dans le jobTitle) → rejeté aussi.
 
-Comportement côté edge function :
+Cela garantit que même si l'IA dérape, le mot "développeur" ne remonte jamais comme skill.
 
-- Hard/soft skills du catalogue → toujours filtrés strictement (comme aujourd'hui).
-- Les skills hors-catalogue détectés sont retournés dans `customHardSkills` / `customSoftSkills` au lieu d'être jetés.
-- `location` est renvoyée brute (texte libre) — la classification "soft vs hard" reste guidée par le system prompt enrichi.
+### 3. Front `StepNaturalLanguage.tsx` — confirmer le check Skills uniquement sur signal réel
 
-Côté front (`StepNaturalLanguage`) :
+Aucun changement de logique nécessaire si l'edge function renvoie correctement `[]`. Le tag passera vert seulement quand un vrai skill est présent.
 
-- `customHardSkills` → ajoutés à `mustHaveSkills` ET poussés dans `customSkills` (déjà persistés en BD).
-- `customSoftSkills` → ajoutés à `mustHaveSoftSkills`.
-- `jobDescription` → pré-remplit `data.description`.
-- `location` → pré-remplit le nouveau champ `data.workLocation`.
+## Fichiers modifiés
 
-Les checkmarks se basent sur :
-
-- Titre = `jobTitle` non vide
-- Skills = au moins 1 hard skill (catalogue OU custom)
-- Localisation = `location` non vide
-- Langues = au moins 1 langue détectée
-
-## 3. Champ "Adresse du lieu de travail" (obligatoire)
-
-### Base de données
-
-Migration : ajouter à `requests`
-
-```sql
-ALTER TABLE public.requests
-  ADD COLUMN work_location text NOT NULL DEFAULT '';
-```
-
-### Code
-
-- `RequestFormData` : ajout `workLocation: string`.
-- `StepProfileAndJob` : nouveau champ Input "Adresse du lieu de travail *" dans la section "Détails du poste", placé juste après "Mode de travail".
-- `canProceed` : ajouter `data.workLocation.trim().length > 0`.
-- `StepRecap` : afficher l'adresse + inclure `work_location` dans le payload `insert/update`.
-- `NewRequest` (load draft + saveDraft) : lire/écrire `work_location`.
-- `AdminRequestEditForm` : ajouter le champ pour les admins.
-
-## 4. Lock intelligent des demi-journées (étudiants)
-
-Règle : `maxSlots = daysPerWeek × 2`.
-
-Dans `StepProfileAndJob` (mode étudiant + horaires fixes) :
-
-- Calcul du compteur : `usedSlots = sum(scheduleDetails[day].length)`.
-- Affichage au-dessus de la grille : `Demi-journées sélectionnées : usedSlots / maxSlots`.
-- Pour chaque badge "Matin" / "Après-midi" non sélectionné :
-  - Si `usedSlots >= maxSlots` → badge grisé, `cursor-not-allowed`, clic ignoré.
-- Les badges déjà sélectionnés restent toujours cliquables (pour décocher).
-- Si l'utilisateur baisse `daysPerWeek` et que `usedSlots > newMax` → `useEffect` qui tronque automatiquement les sélections excédentaires (en gardant l'ordre d'insertion, on coupe les derniers).
-- Petit message d'aide : `"1 jour = 2 demi-journées (matin + après-midi). Limite atteinte."` quand bloqué.
-
-Même logique reportée dans `AdminRequestEditForm`.
-
-## 5. Détails techniques
-
-**Fichiers modifiés**
-
-- `src/components/request/StepNaturalLanguage.tsx` — refonte complète (search bar, debounce, tags checkmarks).
-- `src/lib/request-types.ts` — ajout `workLocation`.
-- `src/components/request/StepProfileAndJob.tsx` — champ adresse, lock demi-journées, troncature auto.
-- `src/components/request/StepRecap.tsx` — adresse dans le payload + récap.
-- `src/pages/NewRequest.tsx` — load/save `work_location`.
-- `src/components/admin/AdminRequestEditForm.tsx` — adresse + lock demi-journées.
-- `supabase/functions/generate-talent-profile/index.ts` — `location`, `jobDescription`, `customHardSkills`, `customSoftSkills` dans le schéma + system prompt.
-
-**Migration SQL**
-
-- `requests.work_location text NOT NULL DEFAULT ''`.
-
-**Pas de nouveau composant UI lourd** : on réutilise `Input`, `Badge`, `Check` (lucide), `Loader2`.
+- `supabase/functions/generate-talent-profile/index.ts` (system prompt + filtre blacklist côté serveur)
 
 ## Critères d'acceptation
 
-1. Sur l'étape 1 (search bar), taper `"Développeur Python à Bruxelles 2 jours FR/EN"` →  dès qu'un élément est détecté, les checkmarks deviennent vert ! 
-2. Cliquer "Continuer" → form pré-rempli avec : titre = Développeur Python, hard skill Python (catalogue), langues FR + EN, adresse = Bruxelles, description courte générée.
-3. Taper `"Besoin d'un dev TypeScript / Figma"` → TypeScript et Figma apparaissent comme custom skills dans Must have après application.
-4. Sans adresse, le bouton "Suivant" du formulaire est désactivé.
-5. Étudiant + 2 jours + horaires fixes → on peut cocher au max 4 demi-journées ; au-delà, les autres badges sont grisés et non cliquables.
-6. Passer de 2 jours à 1 jour avec 4 demi-journées cochées → tronqué automatiquement à 2.
-7. L'adresse est persistée en brouillon, en demande envoyée, et éditable par l'admin.
+1. "développeur" → tags : tous gris (aucun skill, pas de localisation, pas de langue). Titre détecté = "Développeur" (vert).
+2. "développeur Python" → Skills vert (Python), Titre vert. Localisation et Langues gris.
+3. "développeur Python à Bruxelles FR/EN" → 4 tags verts.
+4. "comptable junior" → Titre vert uniquement. Skills/Localisation/Langues gris.
