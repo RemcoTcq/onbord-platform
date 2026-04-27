@@ -233,7 +233,7 @@ const RequestDetail = () => {
             ].map(([label, val]) => (
               <div key={String(label)} className="flex justify-between text-sm">
                 <span className="text-card-foreground/60">{label}</span>
-                <span className="text-card-foreground capitalize">{String(val)}</span>
+                <span className="text-card-foreground">{String(val)}</span>
               </div>
             ))}
           </CardContent>
