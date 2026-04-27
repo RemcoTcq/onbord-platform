@@ -460,27 +460,52 @@ export const StepProfileAndJob = ({ data, onChange, onNext, onBack }: Props) => 
 
             {data.scheduleType === "fixed" && (
               <div className="space-y-3 rounded-lg border border-card-foreground/10 p-4">
-                <p className="text-sm text-card-foreground/60">Sélectionnez les créneaux</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-card-foreground/60">Sélectionnez les créneaux</p>
+                  <p className="text-xs font-medium text-card-foreground/70">
+                    {usedSlots} / {maxSlots} demi-journées
+                  </p>
+                </div>
+                <p className="text-xs text-card-foreground/50">
+                  1 jour = 2 demi-journées (matin + après-midi).{slotsLocked ? " Limite atteinte." : ""}
+                </p>
                 <div className="grid gap-2">
-                  {DAYS.map((day) => (
-                    <div key={day} className="flex items-center gap-3">
-                      <span className="w-20 text-sm font-medium text-card-foreground">{day}</span>
-                      <Badge
-                        variant={(data.scheduleDetails[day] || []).includes("morning") ? "default" : "outline"}
-                        className={`cursor-pointer ${!(data.scheduleDetails[day] || []).includes("morning") ? "border-card-foreground/20 text-card-foreground" : ""}`}
-                        onClick={() => toggleScheduleSlot(day, "morning")}
-                      >
-                        Matin
-                      </Badge>
-                      <Badge
-                        variant={(data.scheduleDetails[day] || []).includes("afternoon") ? "default" : "outline"}
-                        className={`cursor-pointer ${!(data.scheduleDetails[day] || []).includes("afternoon") ? "border-card-foreground/20 text-card-foreground" : ""}`}
-                        onClick={() => toggleScheduleSlot(day, "afternoon")}
-                      >
-                        Après-midi
-                      </Badge>
-                    </div>
-                  ))}
+                  {DAYS.map((day) => {
+                    const slots = data.scheduleDetails[day] || [];
+                    const morningOn = slots.includes("morning");
+                    const afternoonOn = slots.includes("afternoon");
+                    const morningDisabled = !morningOn && slotsLocked;
+                    const afternoonDisabled = !afternoonOn && slotsLocked;
+                    return (
+                      <div key={day} className="flex items-center gap-3">
+                        <span className="w-20 text-sm font-medium text-card-foreground">{day}</span>
+                        <Badge
+                          variant={morningOn ? "default" : "outline"}
+                          aria-disabled={morningDisabled}
+                          className={`transition-opacity ${
+                            morningDisabled
+                              ? "cursor-not-allowed opacity-40 border-card-foreground/20 text-card-foreground"
+                              : `cursor-pointer ${!morningOn ? "border-card-foreground/20 text-card-foreground" : ""}`
+                          }`}
+                          onClick={() => !morningDisabled && toggleScheduleSlot(day, "morning")}
+                        >
+                          Matin
+                        </Badge>
+                        <Badge
+                          variant={afternoonOn ? "default" : "outline"}
+                          aria-disabled={afternoonDisabled}
+                          className={`transition-opacity ${
+                            afternoonDisabled
+                              ? "cursor-not-allowed opacity-40 border-card-foreground/20 text-card-foreground"
+                              : `cursor-pointer ${!afternoonOn ? "border-card-foreground/20 text-card-foreground" : ""}`
+                          }`}
+                          onClick={() => !afternoonDisabled && toggleScheduleSlot(day, "afternoon")}
+                        >
+                          Après-midi
+                        </Badge>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
