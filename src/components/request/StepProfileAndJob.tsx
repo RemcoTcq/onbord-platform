@@ -575,6 +575,17 @@ export const StepProfileAndJob = ({ data, onChange, onNext, onBack }: Props) => 
             </SelectContent>
           </Select>
         </div>
+
+        <div className="space-y-2">
+          <Label className="text-card-foreground">Adresse du lieu de travail *</Label>
+          <Input
+            value={data.workLocation}
+            onChange={(e) => onChange({ workLocation: e.target.value })}
+            placeholder="Ex: Avenue Louise 250, 1050 Bruxelles"
+            className="bg-card border-card-foreground/20 text-card-foreground"
+          />
+          <p className="text-xs text-card-foreground/50">L'adresse exacte du bureau ou du site où le talent travaillera (utile même en remote partiel).</p>
+        </div>
       </div>
 
       <div className="flex justify-between">
