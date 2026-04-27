@@ -114,11 +114,42 @@ export const StepProfileAndJob = ({ data, onChange, onNext, onBack }: Props) => 
     onChange({ languages: data.languages.filter((l) => l.name !== name) });
   };
 
+  // Half-day slots: 1 day = 2 half-days
+  const maxSlots = (data.daysPerWeek || 0) * 2;
+  const usedSlots = Object.values(data.scheduleDetails || {}).reduce(
+    (sum, slots) => sum + (slots?.length || 0),
+    0,
+  );
+  const slotsLocked = usedSlots >= maxSlots;
+
   const toggleScheduleSlot = (day: string, slot: string) => {
     const current = data.scheduleDetails[day] || [];
-    const updated = current.includes(slot) ? current.filter((s) => s !== slot) : [...current, slot];
+    const isSelected = current.includes(slot);
+    // Block adding if max reached
+    if (!isSelected && usedSlots >= maxSlots) return;
+    const updated = isSelected ? current.filter((s) => s !== slot) : [...current, slot];
     onChange({ scheduleDetails: { ...data.scheduleDetails, [day]: updated } });
   };
+
+  // Auto-truncate excess slots when daysPerWeek decreases
+  useEffect(() => {
+    if (data.talentType !== "student" || data.scheduleType !== "fixed") return;
+    if (usedSlots <= maxSlots) return;
+    let toRemove = usedSlots - maxSlots;
+    const next: Record<string, string[]> = {};
+    // Iterate in reverse over DAYS to drop the latest first
+    const reversed = [...DAYS].reverse();
+    for (const day of reversed) {
+      const slots = [...(data.scheduleDetails[day] || [])];
+      while (toRemove > 0 && slots.length > 0) {
+        slots.pop();
+        toRemove--;
+      }
+      next[day] = slots;
+    }
+    onChange({ scheduleDetails: next });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.daysPerWeek]);
 
   const setEmploymentType = (type: "full_time" | "part_time") => {
     if (type === "full_time") {
@@ -133,7 +164,8 @@ export const StepProfileAndJob = ({ data, onChange, onNext, onBack }: Props) => 
     data.mustHaveSkills.length > 0 &&
     data.title &&
     data.description &&
-    data.talentsNumber > 0;
+    data.talentsNumber > 0 &&
+    data.workLocation.trim().length > 0;
 
   const SkillColumns = ({
     mustHave,
