@@ -162,65 +162,104 @@ export type Database = {
         Row: {
           alias: string
           availability: string
+          availability_regime: string
+          bio: string
           created_at: string
+          diploma: string
           email: string
           experience_years: number
+          experiences: Json
+          first_name: string
           full_name: string
+          hard_skills_detail: Json
           headline: string
           id: string
           languages: Json
+          last_initial: string
           linkedin_url: string
           location_area: string
+          looking_for: Json
           phone: string
           rejection_other: string
           rejection_reasons: string[]
           request_id: string
+          school: string
           skills: string[]
+          soft_skills_detail: Json
           status: string
+          study_field: string
+          study_year: string
           summary: string
           updated_at: string
+          validated_by_onbord: boolean
         }
         Insert: {
           alias?: string
           availability?: string
+          availability_regime?: string
+          bio?: string
           created_at?: string
+          diploma?: string
           email?: string
           experience_years?: number
+          experiences?: Json
+          first_name?: string
           full_name?: string
+          hard_skills_detail?: Json
           headline?: string
           id?: string
           languages?: Json
+          last_initial?: string
           linkedin_url?: string
           location_area?: string
+          looking_for?: Json
           phone?: string
           rejection_other?: string
           rejection_reasons?: string[]
           request_id: string
+          school?: string
           skills?: string[]
+          soft_skills_detail?: Json
           status?: string
+          study_field?: string
+          study_year?: string
           summary?: string
           updated_at?: string
+          validated_by_onbord?: boolean
         }
         Update: {
           alias?: string
           availability?: string
+          availability_regime?: string
+          bio?: string
           created_at?: string
+          diploma?: string
           email?: string
           experience_years?: number
+          experiences?: Json
+          first_name?: string
           full_name?: string
+          hard_skills_detail?: Json
           headline?: string
           id?: string
           languages?: Json
+          last_initial?: string
           linkedin_url?: string
           location_area?: string
+          looking_for?: Json
           phone?: string
           rejection_other?: string
           rejection_reasons?: string[]
           request_id?: string
+          school?: string
           skills?: string[]
+          soft_skills_detail?: Json
           status?: string
+          study_field?: string
+          study_year?: string
           summary?: string
           updated_at?: string
+          validated_by_onbord?: boolean
         }
         Relationships: [
           {
@@ -346,23 +385,36 @@ export type Database = {
         Row: {
           alias: string | null
           availability: string | null
+          availability_regime: string | null
+          bio: string | null
           created_at: string | null
+          diploma: string | null
           email: string | null
           experience_years: number | null
+          experiences: Json | null
+          first_name: string | null
           full_name: string | null
+          hard_skills_detail: Json | null
           headline: string | null
           id: string | null
           languages: Json | null
+          last_initial: string | null
           linkedin_url: string | null
           location_area: string | null
+          looking_for: Json | null
           phone: string | null
           rejection_other: string | null
           rejection_reasons: string[] | null
           request_id: string | null
+          school: string | null
           skills: string[] | null
+          soft_skills_detail: Json | null
           status: string | null
+          study_field: string | null
+          study_year: string | null
           summary: string | null
           updated_at: string | null
+          validated_by_onbord: boolean | null
         }
         Relationships: [
           {

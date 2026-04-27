@@ -246,6 +246,7 @@ const RequestDetail = () => {
         <ProposedProfilesSection
           requestId={request.id}
           requestStatus={request.status}
+          requestSkills={[...(request.skills || []), ...(request.custom_skills || []), ...(request.nice_to_have_skills || [])]}
           onStatusChange={(s) => setRequest({ ...request, status: s })}
         />
 

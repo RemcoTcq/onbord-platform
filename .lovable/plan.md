@@ -1,127 +1,136 @@
-# Workflow recrutement avancé — Profils, entretiens, notifications
+# Profils étudiants enrichis — création admin & vue détaillée entreprise
 
-Ajout du cycle de vie complet post-validation : l'admin propose des profils anonymisés, l'entreprise valide ou rejette, organise un entretien, et l'admin reçoit des notifications en temps réel. La confidentialité des talents est garantie jusqu'au recrutement finalisé.
+## Objectif
 
-## 1. Modèle de données (nouvelles tables)
+1. **Admin** : un formulaire de création de profil structuré, beaucoup plus complet (formation, expériences, soft skills avec exemples, langues notées, objectifs, etc.).
+2. **Entreprise** : vue liste sous forme de **cartes enrichies**, avec un bouton **"Voir profil complet"** qui ouvre un modal détaillé, depuis lequel on peut cliquer **✅ Intéressé** ou **❌ Pas le bon profil**.
 
-### `proposed_profiles` — profils proposés par l'admin
+---
 
-**Aucune donnée de contact visible côté entreprise** avant `Recrutement finalisé`.
+## 1. Modèle de données — colonnes ajoutées à `proposed_profiles`
 
-Colonnes :
+Toutes nullable / défauts vides. Toutes anonymes côté entreprise (pas de nom de famille, pas de nom d'entreprise dans les expériences).
 
-- `id`, `request_id`, `created_at`, `updated_at`
-- **Publiques** : `alias` ("Talent #1"), `headline`, `summary` (présentation anonyme), `experience_years`, `skills` text[], `languages` jsonb, `availability`, `location_area` (zone large, ex "Bruxelles")
-- **Privées (admin only)** : `full_name`, `email`, `phone`, `linkedin_url`
-- `status` : `pending` | `accepted` | `rejected`
-- `rejection_reasons` text[], `rejection_other` text
+**Identité publique anonymisée**
 
-**Sécurité** : vue SQL `proposed_profiles_public` qui n'expose JAMAIS les colonnes privées tant que `request.status != 'Recrutement finalisé'`. Le front interroge la vue, pas la table directement. RLS sur la table : admin full access, entreprise SELECT via la vue uniquement, UPDATE limité au `status` sur ses propres profils.
+- `first_name` (text) — prénom affiché
+- `last_initial` (text) — initiale du nom (générée auto à partir de `full_name`)
+- `bio` (text) — 3–4 lignes
+- `validated_by_onbord` (bool, default true) — pour afficher le badge "Validé Onbord"
 
-### `interview_requests` — créneaux proposés
+**Formation**
 
-- `id`, `proposed_profile_id`, `request_id`
-- `mode` : `video` | `onsite`
-- `proposed_slots` jsonb (array `{ date, period: 'morning'|'afternoon' }`, 2-3 max)
-- `confirmed_slot` jsonb (rempli par admin)
-- `status` : `pending_admin` | `confirmed` | `cancelled`
+- `school` (text)
+- `diploma` (text)
+- `study_year` (text) — ex: "Master 1", "Bac+3"
+- `study_field` (text)
 
-### `admin_notifications` — fil d'événements admin
+**Compétences**
 
-- `type` : `profiles_rejected` | `profile_accepted` | `interview_slots_proposed`
-- `request_id`, `payload` jsonb, `read` bool, `created_at`
-- RLS : admin uniquement
-- Realtime activé pour notifications instantanées
+- `hard_skills_detail` (jsonb) — `[{ name: "Python",}, …]` 
+- `soft_skills_detail` (jsonb) — `[{ name: "Autonomie", }, …]` 
+- `languages` *(existe déjà)* → format renforcé `[{ name, level: 1-5 }]`
 
-### Statuts de demande étendus
+**Expériences (anonymisées — sans nom d'entreprise)**
 
-Mise à jour de `STATUSES` et de `validate_request_status()` :
+- `experiences` (jsonb) — `[{ role, sector, duration en année, description }, …]`
 
-- `Demande validée`
-- `Profils en cours de sélection` (après rejet total)
-- `Profils envoyés` (admin a poussé des profils)
-- `Profils validés`
-- `Entretien en cours d'organisation`
-- `Recrutement finalisé`
+**Objectifs / recherche**
 
-## 2. Côté entreprise — `RequestDetail.tsx`
+- `looking_for` (jsonb) — `{ contract_type, sector, ambitions }`
 
-Nouvelle section **"Profils proposés"** (visible si la demande a des profils) :
+**Disponibilité**
 
-- Cards anonymes avec alias, headline, summary, skills, langues, dispo, zone
-- Boutons ✅ Intéressé / ❌ Pas intéressé par profil
+- `availability_regime` (text) — temps plein / partiel / X jours/sem
 
-### Rejet total (tous les profils ❌)
+**Privé Onbord (jamais exposé à l'entreprise)**
 
-Dialog obligatoire avec checkboxes :
+- `full_name` (existe), `email`, `phone`, `linkedin_url` (existent déjà)
 
-- Niveau de diplôme trop faible
-- Hard skills insuffisants
-- Soft skills ne correspondent pas
-- Localisation ou disponibilité inadaptée
-- Autre (textarea obligatoire)
+La vue `proposed_profiles_public` est recréée pour exposer les nouveaux champs publics et continuer à masquer les coordonnées tant que `requests.status != 'Recrutement finalisé'`.
 
-Au submit : statut → `Profils en cours de sélection`, notification admin créée, message affiché *"Pas de problème ! Nous analysons votre retour et revenons vers vous avec de nouveaux profils sous 48h."*
+---
 
-### Acceptation (au moins un profil ✅)
+## 2. Formulaire admin enrichi (`AdminProfilesManager.tsx`)
 
-1. Statut → `Profils validés`
-2. Notification admin
-3. Modal **"Organisation entretien"** s'ouvre automatiquement :
-  - Choix : 📹 Appel vidéo / 🏢 Sur place
-  - DatePicker Shadcn pour 2-3 créneaux (date + matin/après-midi)
-4. Au submit : `interview_requests` créé, statut → `Entretien en cours d'organisation`, notification admin
-5. Affichage : *"Entretien en cours d'organisation — Onbord revient vers vous sous 24h avec un créneau confirmé."*
+Le modal d'édition passe d'un seul écran à un formulaire en sections (Accordion) :
 
-### Confidentialité
+1. **Identité (privée)** — nom complet, email, téléphone, LinkedIn → l'initiale du nom est calculée automatiquement à partir du nom de famille.
+2. **Présentation publique** — prénom, bio (3–4 lignes), zone géographique
+3. **Formation** — école, diplôme, année, domaine
+4. **Hard skills** — éditeur dynamique : ajouter une compétence
+5. **Soft skills** — éditeur dynamique 3–5 entrées : nom 
+6. **Langues** — éditeur : nom + niveau /5
+7. **Expériences** — éditeur dynamique : rôle, secteur, durée, description (PAS de nom d'entreprise)
+8. **Ce qu'il cherche** — type de contrat, secteur, ambitions
+9. **Disponibilité** — date de début, régime (temps plein / partiel / X jours)
 
-- Front : ne JAMAIS afficher nom/email/tel/LinkedIn tant que `status != 'Recrutement finalisé'`
-- DB : la vue publique ne retourne pas ces champs
-- Une fois finalisé : section "Coordonnées du talent" révélée sur le profil accepté
+Chaque section repliable. À l'enregistrement, `last_initial` est dérivé automatiquement (1ère lettre du nom de famille).
 
-## 3. Côté admin
+---
 
-### Sur `RequestDetail` en mode admin
+## 3. Vue liste — cartes enrichies (`ProposedProfilesSection.tsx`)
 
-**Bloc "Gestion profils"** :
+Chaque carte affiche :
 
-- Liste des profils avec données complètes
-- Bouton "+ Ajouter un profil" → formulaire complet
-- Edit / Delete par profil
-- Affichage des feedbacks de rejet
+- **En-tête** : "Prénom L." + badge **"Validé Onbord"** (vert) + statut (Intéressé / Pas intéressé)
+- **École + année** + **domaine d'études**
+- **Hard skills** sous forme de badges — celles qui matchent avec les `skills` de la `request` sont **en vert** (les autres en gris)
+- **Disponibilité** (date + régime)
+- **Localisation**
+- **Actions** (si statut `pending` et demande non finalisée) :
+  - **"Voir profil complet"** → ouvre le modal détaillé
+  - ✅ **Intéressé**
+  - ❌ **Pas le bon profil** → ouvre une petite popup pour saisir un commentaire (stocké dans `proposed_profiles.rejection_other`)
 
-**Bloc "Entretiens"** :
+Si TOUS les profils passent en `rejected`, on continue à déclencher le modal "Pourquoi ?" existant (`RejectAllProfilesDialog`).
 
-- Liste des `interview_requests` avec créneaux proposés
-- Bouton "Confirmer ce créneau" → met à jour le statut
-- Bouton "Envoyer les invitations" (placeholder — pas d'email pour l'instant)
+---
 
-### Page Admin (`/admin`)
+## 4. Modal "Profil complet" (nouveau composant `ProfileDetailDialog.tsx`)
 
-- Cloche de notifications dans le header avec badge (count des non-lues)
-- Dropdown listant les notifications récentes → lien vers la demande
-- Realtime via Supabase channel sur `admin_notifications`
+Sections affichées (toujours anonymisées) :
 
-## 4. Fichiers impactés
+- **Présentation** — Prénom L., bio, badge "Validé Onbord"
+- **Formation** — école, diplôme, année, domaine
+- **Hard skills** — liste avec niveau (Débutant / Intermédiaire / Avancé), matches en vert
+- **Soft skills** — chaque soft skill avec son exemple
+- **Langues** — avec barre de niveau /5
+- **Expériences** — timeline (rôle • secteur • durée • description), sans nom d'entreprise
+- **Objectifs** — type de contrat, secteur recherché, ambitions
+- **Disponibilité** — date + régime + localisation
 
-**Nouveaux** :
+Footer du modal :
 
-- Migration SQL : tables + vue + RLS + realtime
-- `src/components/request/ProposedProfilesSection.tsx`
-- `src/components/request/RejectAllProfilesDialog.tsx`
-- `src/components/request/OrganizeInterviewDialog.tsx`
-- `src/components/admin/AdminProfilesManager.tsx`
-- `src/components/admin/AdminInterviewsPanel.tsx`
-- `src/components/admin/AdminNotificationsBell.tsx`
-- `src/hooks/useAdminNotifications.ts`
+- Si profil `pending` et demande non finalisée → boutons ✅ **Intéressé** / ❌ **Pas le bon profil**
+- Sinon → badge de statut
 
-**Modifiés** :
+Les coordonnées (nom complet, email, téléphone, LinkedIn) ne s'affichent **jamais** dans ce modal tant que `requests.status != 'Recrutement finalisé'`.
 
-- `src/lib/constants.ts` (nouveaux statuts)
-- `src/pages/RequestDetail.tsx` (intégration sections + reveal contact)
-- `src/pages/Admin.tsx` / `src/components/AppLayout.tsx` (cloche notifications)
+---
 
-## 5. Hors-scope (à confirmer plus tard)
+## 5. Correctif RLS (bug vu dans les logs réseau)
 
-- **Envoi d'emails réels** aux talents/entreprises pour les invitations : non couvert ici (nécessite setup email infra). Pour l'instant : notifications in-app + bouton placeholder côté admin.
-  &nbsp;
+Le PATCH côté entreprise vers `requests.status = "Profils en cours de sélection"` retourne **403** : la policy `Users can update own requests` n'autorise dans son `WITH CHECK` que `draft` et `Demande validée`.
+
+Migration : élargir le `WITH CHECK` pour autoriser le client à transiter, sur ses propres demandes, vers les statuts déclenchés par ses propres actions :
+
+- `Profils en cours de sélection` (rejet total)
+- `Profils validés` (validation d'un profil)
+- `Entretien en cours d'organisation` (créneaux envoyés)
+
+Les transitions vers `Profils envoyés` et `Recrutement finalisé` restent réservées à l'admin (déjà couvert par `has_role(..., 'admin')`).
+
+---
+
+## Fichiers impactés
+
+- **Migration SQL** : ajout des colonnes sur `proposed_profiles`, recréation de la vue `proposed_profiles_public` (avec `security_invoker=on`), correction de la policy `Users can update own requests`.
+- `src/components/admin/AdminProfilesManager.tsx` — formulaire admin sectionné + éditeurs dynamiques (hard skills, soft skills, langues, expériences)
+- `src/components/request/ProposedProfilesSection.tsx` — cartes enrichies + bouton "Voir profil complet" + popup commentaire de rejet
+- `src/components/request/ProfileDetailDialog.tsx` *(nouveau)* — modal détaillé avec actions Intéressé / Pas intéressé
+
+## Hors périmètre
+
+- Upload de photo / CV PDF (peut être ajouté ensuite)
+- Calcul automatique d'un score de matching global (on se contente de mettre en vert les hard skills qui matchent)
