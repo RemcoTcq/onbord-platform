@@ -149,7 +149,10 @@ const Home = () => {
                         : "0%",
                   }}
                 />
-                <div className="relative grid grid-cols-5 gap-2">
+                <div
+                  className="relative grid gap-2"
+                  style={{ gridTemplateColumns: `repeat(${PROGRESS_STEPS.length}, minmax(0, 1fr))` }}
+                >
                   {PROGRESS_STEPS.map((step, i) => {
                     const done = i < currentStep;
                     const current = i === currentStep;
