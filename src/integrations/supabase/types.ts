@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          payload: Json
+          read: boolean
+          request_id: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          read?: boolean
+          request_id?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payload?: Json
+          read?: boolean
+          request_id?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notifications_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_requests: {
+        Row: {
+          confirmed_slot: Json | null
+          created_at: string
+          id: string
+          mode: string
+          proposed_profile_id: string
+          proposed_slots: Json
+          request_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          confirmed_slot?: Json | null
+          created_at?: string
+          id?: string
+          mode: string
+          proposed_profile_id: string
+          proposed_slots?: Json
+          request_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          confirmed_slot?: Json | null
+          created_at?: string
+          id?: string
+          mode?: string
+          proposed_profile_id?: string
+          proposed_slots?: Json
+          request_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_requests_proposed_profile_id_fkey"
+            columns: ["proposed_profile_id"]
+            isOneToOne: false
+            referencedRelation: "proposed_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_requests_proposed_profile_id_fkey"
+            columns: ["proposed_profile_id"]
+            isOneToOne: false
+            referencedRelation: "proposed_profiles_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interview_requests_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           city: string
@@ -64,6 +157,80 @@ export type Database = {
           vat_number?: string
         }
         Relationships: []
+      }
+      proposed_profiles: {
+        Row: {
+          alias: string
+          availability: string
+          created_at: string
+          email: string
+          experience_years: number
+          full_name: string
+          headline: string
+          id: string
+          languages: Json
+          linkedin_url: string
+          location_area: string
+          phone: string
+          rejection_other: string
+          rejection_reasons: string[]
+          request_id: string
+          skills: string[]
+          status: string
+          summary: string
+          updated_at: string
+        }
+        Insert: {
+          alias?: string
+          availability?: string
+          created_at?: string
+          email?: string
+          experience_years?: number
+          full_name?: string
+          headline?: string
+          id?: string
+          languages?: Json
+          linkedin_url?: string
+          location_area?: string
+          phone?: string
+          rejection_other?: string
+          rejection_reasons?: string[]
+          request_id: string
+          skills?: string[]
+          status?: string
+          summary?: string
+          updated_at?: string
+        }
+        Update: {
+          alias?: string
+          availability?: string
+          created_at?: string
+          email?: string
+          experience_years?: number
+          full_name?: string
+          headline?: string
+          id?: string
+          languages?: Json
+          linkedin_url?: string
+          location_area?: string
+          phone?: string
+          rejection_other?: string
+          rejection_reasons?: string[]
+          request_id?: string
+          skills?: string[]
+          status?: string
+          summary?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposed_profiles_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       requests: {
         Row: {
@@ -175,7 +342,38 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      proposed_profiles_public: {
+        Row: {
+          alias: string | null
+          availability: string | null
+          created_at: string | null
+          email: string | null
+          experience_years: number | null
+          full_name: string | null
+          headline: string | null
+          id: string | null
+          languages: Json | null
+          linkedin_url: string | null
+          location_area: string | null
+          phone: string | null
+          rejection_other: string | null
+          rejection_reasons: string[] | null
+          request_id: string | null
+          skills: string[] | null
+          status: string | null
+          summary: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proposed_profiles_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
