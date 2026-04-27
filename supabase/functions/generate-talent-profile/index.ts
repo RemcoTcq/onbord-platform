@@ -379,7 +379,24 @@ Deno.serve(async (req) => {
         : null;
 
     // Custom skills (out-of-catalog), de-duplicated case-insensitively
-    const dedupCustom = (arr: unknown, exclude: Set<string>): string[] => {
+    const JOB_TITLE_BLACKLIST = [
+      "developpeur", "developer", "dev", "programmeur", "programmer", "coder", "codeur",
+      "comptable", "accountant", "marketeur", "marketer", "ingenieur", "engineer",
+      "assistant", "assistante", "manager", "consultant", "consultante",
+      "analyste", "analyst", "commercial", "commerciale", "sales", "vendeur", "vendeuse",
+      "designer", "graphiste", "chef de projet", "project manager", "product owner",
+      "scrum master", "data scientist", "data analyst", "data engineer",
+      "stagiaire", "intern", "etudiant", "etudiante", "student",
+      "freelance", "freelancer", "recruteur", "recruteuse", "recruiter",
+      "developpeur web", "developpeur mobile", "developpeur backend", "developpeur frontend",
+      "fullstack", "backend", "frontend", "full stack",
+    ];
+    const blacklistSet = new Set(JOB_TITLE_BLACKLIST.map(normalize));
+
+    const userQueryNorm = normalize(description);
+    const jobTitleNorm = normalize(jobTitle);
+
+    const dedupCustom = (arr: unknown, exclude: Set<string>, applyJobBlacklist: boolean): string[] => {
       if (!Array.isArray(arr)) return [];
       const out: string[] = [];
       const seen = new Set<string>();
@@ -389,6 +406,15 @@ Deno.serve(async (req) => {
         if (!trimmed || trimmed.length > 60) continue;
         const key = normalize(trimmed);
         if (seen.has(key) || exclude.has(key)) continue;
+
+        // Anti-hallucination : must be explicitly present in the user's query
+        if (!userQueryNorm.includes(key)) continue;
+
+        if (applyJobBlacklist) {
+          if (blacklistSet.has(key)) continue;
+          if (jobTitleNorm && (key === jobTitleNorm || jobTitleNorm.includes(key) || key.includes(jobTitleNorm))) continue;
+        }
+
         seen.add(key);
         out.push(trimmed);
       }
@@ -402,8 +428,8 @@ Deno.serve(async (req) => {
       ...matchedSoftSkills.map(normalize),
       ...SOFT_SKILLS.map(normalize),
     ]);
-    const customHardSkills = dedupCustom(parsed.customHardSkills, excludeHard);
-    const customSoftSkills = dedupCustom(parsed.customSoftSkills, excludeSoft);
+    const customHardSkills = dedupCustom(parsed.customHardSkills, excludeHard, true);
+    const customSoftSkills = dedupCustom(parsed.customSoftSkills, excludeSoft, false);
 
     return new Response(
       JSON.stringify({
