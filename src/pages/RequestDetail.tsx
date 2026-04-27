@@ -23,6 +23,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AdminRequestEditForm } from "@/components/admin/AdminRequestEditForm";
 import { getTalentTypeLabel } from "@/lib/talent-type";
+import { ProposedProfilesSection } from "@/components/request/ProposedProfilesSection";
+import { AdminProfilesManager } from "@/components/admin/AdminProfilesManager";
+import { AdminInterviewsPanel } from "@/components/admin/AdminInterviewsPanel";
 
 const RequestDetail = () => {
   const { id } = useParams();
