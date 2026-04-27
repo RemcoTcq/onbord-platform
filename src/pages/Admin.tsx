@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { AdminNotificationsBell } from "@/components/admin/AdminNotificationsBell";
 
 interface AdminRequest {
   id: string;
@@ -88,9 +89,12 @@ const Admin = () => {
   return (
     <AppLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Admin — Toutes les demandes</h1>
-          <p className="text-muted-foreground">{requests.length} demande(s) au total</p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Admin — Toutes les demandes</h1>
+            <p className="text-muted-foreground">{requests.length} demande(s) au total</p>
+          </div>
+          <AdminNotificationsBell />
         </div>
 
         {loading ? (

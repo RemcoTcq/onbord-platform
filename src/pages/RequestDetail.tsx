@@ -23,6 +23,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { AdminRequestEditForm } from "@/components/admin/AdminRequestEditForm";
 import { getTalentTypeLabel } from "@/lib/talent-type";
+import { ProposedProfilesSection } from "@/components/request/ProposedProfilesSection";
+import { AdminProfilesManager } from "@/components/admin/AdminProfilesManager";
+import { AdminInterviewsPanel } from "@/components/admin/AdminInterviewsPanel";
 
 const RequestDetail = () => {
   const { id } = useParams();
@@ -238,6 +241,28 @@ const RequestDetail = () => {
             ))}
           </CardContent>
         </Card>
+
+        {/* Proposed profiles (visible to owner + admin) */}
+        <ProposedProfilesSection
+          requestId={request.id}
+          requestStatus={request.status}
+          onStatusChange={(s) => setRequest({ ...request, status: s })}
+        />
+
+        {/* Admin-only management */}
+        {isAdmin && (
+          <>
+            <AdminProfilesManager requestId={request.id} requestStatus={request.status} />
+            <AdminInterviewsPanel
+              requestId={request.id}
+              onConfirmed={() => {
+                supabase.from("requests").update({ status: "Recrutement finalisé" }).eq("id", request.id).then(() => {
+                  setRequest({ ...request, status: "Recrutement finalisé" });
+                });
+              }}
+            />
+          </>
+        )}
 
         {/* Skills */}
         <Card>

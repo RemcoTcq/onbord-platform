@@ -24,6 +24,7 @@ export const STATUSES = [
   "Profils en cours de sélection",
   "Profils envoyés",
   "Profils validés",
+  "Entretien en cours d'organisation",
   "Recrutement finalisé",
 ] as const;
 
