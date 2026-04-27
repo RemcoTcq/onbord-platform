@@ -195,14 +195,17 @@ ${ALLOWED_LANGUAGES.join(", ")}
 
 RÈGLES STRICTES :
 - domain : DOIT être un des 6 domaines listés ci-dessus, à l'identique (avec accents et casse).
-- hardSkills : tableau de skills issus EXCLUSIVEMENT du catalogue du domaine choisi, à l'identique. INTERDIT d'inventer ou paraphraser un skill. Si un besoin exprimé n'a pas d'équivalent dans la liste (ex: "cold calling", "prospection", "TypeScript", "Figma"), NE LE METS PAS — laisse-le de côté, l'utilisateur l'ajoutera lui-même.
+- hardSkills : tableau de skills issus EXCLUSIVEMENT du catalogue du domaine choisi, à l'identique. INTERDIT d'inventer ou paraphraser un skill.
+- customHardSkills : tableau des hard skills / outils / technologies détectés dans la description mais ABSENTS du catalogue ci-dessus (ex: "TypeScript", "Figma", "Notion", "Kubernetes"). N'inclure ici que des compétences techniques/outils concrets, jamais des traits de personnalité.
 - softSkills : tableau strictement issu de la liste fermée des soft skills ci-dessus, à l'identique. INTERDIT d'inventer.
-- Un savoir-faire technique, un outil, une méthode commerciale ou métier (ex: cold calling, prospection, négociation, comptabilité, design) n'est JAMAIS un soft skill. Les soft skills sont uniquement des traits comportementaux génériques.
-- Si tu hésites pour un item, NE LE METS PAS plutôt que de le mettre au mauvais endroit ou de l'inventer.
+- customSoftSkills : tableau de soft skills (traits comportementaux génériques) détectés mais ABSENTS de la liste fermée. Ne JAMAIS y mettre un savoir-faire technique, un outil, une méthode commerciale ou métier.
+- Un savoir-faire technique, un outil, une méthode commerciale ou métier (ex: cold calling, prospection, négociation, comptabilité, design) n'est JAMAIS un soft skill.
 - talentType : "Étudiant" si stage/job étudiant/temps partiel, "Jeune diplômé" si poste à temps plein/CDI/après diplôme.
 - diplome : "Bachelier", "Master" ou null si non précisé.
-- langues : sous-ensemble strict de ["Français", "Anglais", "Néerlandais"]. Inclure uniquement les langues explicitement ou implicitement requises dans la description. Si aucune langue n'est mentionnée, retourner [].
-- jobTitle : titre court et concis du poste en français (max 6 mots), sans ponctuation finale (ex: "Développeur React", "Comptable junior", "Assistant marketing"). Toujours fournir un titre.`;
+- langues : sous-ensemble strict de ["Français", "Anglais", "Néerlandais"]. Si aucune langue mentionnée, retourner [].
+- jobTitle : titre court et concis du poste en français (max 6 mots), sans ponctuation finale (ex: "Développeur React", "Comptable junior", "Assistant marketing"). Toujours fournir un titre.
+- jobDescription : description courte et professionnelle du poste (2-3 phrases, ton recruteur, en français, max 350 caractères). Décris la mission générale, le contexte et l'impact attendu. Si la description fournie est trop pauvre, propose un texte plausible cohérent avec le titre et les skills.
+- location : ville, pays, ou adresse mentionnée dans la description (ex: "Bruxelles", "Paris", "Liège", "Lyon, France"). null si non mentionnée.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -252,9 +255,17 @@ Deno.serve(async (req) => {
                     type: "array",
                     items: { type: "string", enum: ALL_HARD_SKILLS },
                   },
+                  customHardSkills: {
+                    type: "array",
+                    items: { type: "string" },
+                  },
                   softSkills: {
                     type: "array",
                     items: { type: "string", enum: [...SOFT_SKILLS] },
+                  },
+                  customSoftSkills: {
+                    type: "array",
+                    items: { type: "string" },
                   },
                   talentType: { type: "string", enum: ["Étudiant", "Jeune diplômé"] },
                   diplome: { type: ["string", "null"], enum: ["Bachelier", "Master", null] },
@@ -263,8 +274,10 @@ Deno.serve(async (req) => {
                     items: { type: "string", enum: [...ALLOWED_LANGUAGES] },
                   },
                   jobTitle: { type: "string" },
+                  jobDescription: { type: "string" },
+                  location: { type: ["string", "null"] },
                 },
-                required: ["domain", "hardSkills", "softSkills", "talentType", "diplome", "langues", "jobTitle"],
+                required: ["domain", "hardSkills", "customHardSkills", "softSkills", "customSoftSkills", "talentType", "diplome", "langues", "jobTitle", "jobDescription", "location"],
                 additionalProperties: false,
               },
             },
@@ -359,16 +372,52 @@ Deno.serve(async (req) => {
     }
 
     const jobTitle = typeof parsed.jobTitle === "string" ? parsed.jobTitle.trim() : "";
+    const jobDescription = typeof parsed.jobDescription === "string" ? parsed.jobDescription.trim() : "";
+    const location =
+      typeof parsed.location === "string" && parsed.location.trim().length > 0
+        ? parsed.location.trim()
+        : null;
+
+    // Custom skills (out-of-catalog), de-duplicated case-insensitively
+    const dedupCustom = (arr: unknown, exclude: Set<string>): string[] => {
+      if (!Array.isArray(arr)) return [];
+      const out: string[] = [];
+      const seen = new Set<string>();
+      for (const v of arr) {
+        if (typeof v !== "string") continue;
+        const trimmed = v.trim();
+        if (!trimmed || trimmed.length > 60) continue;
+        const key = normalize(trimmed);
+        if (seen.has(key) || exclude.has(key)) continue;
+        seen.add(key);
+        out.push(trimmed);
+      }
+      return out;
+    };
+    const excludeHard = new Set([
+      ...matchedHardSkills.map(normalize),
+      ...ALL_HARD_SKILLS.map(normalize),
+    ]);
+    const excludeSoft = new Set([
+      ...matchedSoftSkills.map(normalize),
+      ...SOFT_SKILLS.map(normalize),
+    ]);
+    const customHardSkills = dedupCustom(parsed.customHardSkills, excludeHard);
+    const customSoftSkills = dedupCustom(parsed.customSoftSkills, excludeSoft);
 
     return new Response(
       JSON.stringify({
         domain,
         hardSkills: matchedHardSkills,
+        customHardSkills,
         softSkills: matchedSoftSkills,
+        customSoftSkills,
         talentType: talentTypeInternal,
         diplome: parsed.diplome ?? null,
         langues: matchedLanguages,
         jobTitle,
+        jobDescription,
+        location,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
