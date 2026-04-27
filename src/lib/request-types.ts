@@ -22,6 +22,7 @@ export interface RequestFormData {
   scheduleType: "flexible" | "fixed";
   scheduleDetails: Record<string, string[]>;
   workMode: string;
+  workLocation: string;
   // Graduate-only
   employmentType: EmploymentType;
 }
@@ -44,5 +45,6 @@ export const defaultFormData: RequestFormData = {
   scheduleType: "flexible",
   scheduleDetails: {},
   workMode: "remote",
+  workLocation: "",
   employmentType: null,
 };

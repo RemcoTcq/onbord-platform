@@ -91,6 +91,7 @@ export type Database = {
           user_id: string
           weekly_hours: number
           weekly_price: number
+          work_location: string
           work_mode: string
         }
         Insert: {
@@ -118,6 +119,7 @@ export type Database = {
           user_id: string
           weekly_hours?: number
           weekly_price?: number
+          work_location?: string
           work_mode?: string
         }
         Update: {
@@ -145,6 +147,7 @@ export type Database = {
           user_id?: string
           weekly_hours?: number
           weekly_price?: number
+          work_location?: string
           work_mode?: string
         }
         Relationships: []

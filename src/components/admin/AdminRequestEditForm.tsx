@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DOMAINS, HARD_SKILLS_MAP, SOFT_SKILLS, LANGUAGES, DIPLOMAS, DAYS } from "@/lib/constants";
 import { calculatePricing } from "@/lib/pricing-utils";
@@ -30,6 +30,7 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
     schedule_type: request.schedule_type || "flexible",
     schedule_details: (request.schedule_details as Record<string, string[]>) || {},
     work_mode: request.work_mode || "remote",
+    work_location: request.work_location || "",
     diploma: request.diploma || "",
     skills: request.skills || [],
     nice_to_have_skills: request.nice_to_have_skills || [],
@@ -103,11 +104,39 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
     languages: form.languages.map((l) => l.name === name ? { ...l, level } : l),
   });
 
+  const maxSlots = (form.days_per_week || 0) * 2;
+  const usedSlots = Object.values(form.schedule_details || {}).reduce(
+    (sum: number, slots: any) => sum + (slots?.length || 0),
+    0,
+  );
+  const slotsLocked = usedSlots >= maxSlots;
+
   const toggleScheduleSlot = (day: string, slot: string) => {
     const current = form.schedule_details[day] || [];
-    const updated = current.includes(slot) ? current.filter((s) => s !== slot) : [...current, slot];
+    const isSelected = current.includes(slot);
+    if (!isSelected && usedSlots >= maxSlots) return;
+    const updated = isSelected ? current.filter((s) => s !== slot) : [...current, slot];
     update({ schedule_details: { ...form.schedule_details, [day]: updated } });
   };
+
+  // Auto-truncate when daysPerWeek decreases
+  useEffect(() => {
+    if (form.schedule_type !== "fixed") return;
+    if (usedSlots <= maxSlots) return;
+    let toRemove = usedSlots - maxSlots;
+    const next: Record<string, string[]> = {};
+    const reversed = [...DAYS].reverse();
+    for (const day of reversed) {
+      const slots = [...(form.schedule_details[day] || [])];
+      while (toRemove > 0 && slots.length > 0) {
+        slots.pop();
+        toRemove--;
+      }
+      next[day] = slots;
+    }
+    update({ schedule_details: next });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.days_per_week]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -329,13 +358,32 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
 
           {form.schedule_type === "fixed" && (
             <div className="rounded-lg border border-card-foreground/10 p-4 space-y-2">
-              {DAYS.map((day) => (
-                <div key={day} className="flex items-center gap-3">
-                  <span className="w-20 text-sm font-medium text-card-foreground">{day}</span>
-                  <Badge variant={(form.schedule_details[day] || []).includes("morning") ? "default" : "outline"} className={`cursor-pointer ${!(form.schedule_details[day] || []).includes("morning") ? "border-card-foreground/20 text-card-foreground" : ""}`} onClick={() => toggleScheduleSlot(day, "morning")}>Matin</Badge>
-                  <Badge variant={(form.schedule_details[day] || []).includes("afternoon") ? "default" : "outline"} className={`cursor-pointer ${!(form.schedule_details[day] || []).includes("afternoon") ? "border-card-foreground/20 text-card-foreground" : ""}`} onClick={() => toggleScheduleSlot(day, "afternoon")}>Après-midi</Badge>
-                </div>
-              ))}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-card-foreground/60">1 jour = 2 demi-journées{slotsLocked ? " — limite atteinte" : ""}.</p>
+                <p className="text-xs font-medium text-card-foreground/70">{usedSlots} / {maxSlots}</p>
+              </div>
+              {DAYS.map((day) => {
+                const slots = form.schedule_details[day] || [];
+                const morningOn = slots.includes("morning");
+                const afternoonOn = slots.includes("afternoon");
+                const morningDisabled = !morningOn && slotsLocked;
+                const afternoonDisabled = !afternoonOn && slotsLocked;
+                return (
+                  <div key={day} className="flex items-center gap-3">
+                    <span className="w-20 text-sm font-medium text-card-foreground">{day}</span>
+                    <Badge
+                      variant={morningOn ? "default" : "outline"}
+                      className={morningDisabled ? "cursor-not-allowed opacity-40 border-card-foreground/20 text-card-foreground" : `cursor-pointer ${!morningOn ? "border-card-foreground/20 text-card-foreground" : ""}`}
+                      onClick={() => !morningDisabled && toggleScheduleSlot(day, "morning")}
+                    >Matin</Badge>
+                    <Badge
+                      variant={afternoonOn ? "default" : "outline"}
+                      className={afternoonDisabled ? "cursor-not-allowed opacity-40 border-card-foreground/20 text-card-foreground" : `cursor-pointer ${!afternoonOn ? "border-card-foreground/20 text-card-foreground" : ""}`}
+                      onClick={() => !afternoonDisabled && toggleScheduleSlot(day, "afternoon")}
+                    >Après-midi</Badge>
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -349,6 +397,16 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
                 <SelectItem value="onsite">Présentiel</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-card-foreground">Adresse du lieu de travail *</Label>
+            <Input
+              value={form.work_location}
+              onChange={(e) => update({ work_location: e.target.value })}
+              placeholder="Ex: Avenue Louise 250, 1050 Bruxelles"
+              className="bg-card border-card-foreground/20 text-card-foreground"
+            />
           </div>
 
           <Separator className="bg-card-foreground/10" />

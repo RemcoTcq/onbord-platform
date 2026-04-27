@@ -114,11 +114,42 @@ export const StepProfileAndJob = ({ data, onChange, onNext, onBack }: Props) => 
     onChange({ languages: data.languages.filter((l) => l.name !== name) });
   };
 
+  // Half-day slots: 1 day = 2 half-days
+  const maxSlots = (data.daysPerWeek || 0) * 2;
+  const usedSlots = Object.values(data.scheduleDetails || {}).reduce(
+    (sum, slots) => sum + (slots?.length || 0),
+    0,
+  );
+  const slotsLocked = usedSlots >= maxSlots;
+
   const toggleScheduleSlot = (day: string, slot: string) => {
     const current = data.scheduleDetails[day] || [];
-    const updated = current.includes(slot) ? current.filter((s) => s !== slot) : [...current, slot];
+    const isSelected = current.includes(slot);
+    // Block adding if max reached
+    if (!isSelected && usedSlots >= maxSlots) return;
+    const updated = isSelected ? current.filter((s) => s !== slot) : [...current, slot];
     onChange({ scheduleDetails: { ...data.scheduleDetails, [day]: updated } });
   };
+
+  // Auto-truncate excess slots when daysPerWeek decreases
+  useEffect(() => {
+    if (data.talentType !== "student" || data.scheduleType !== "fixed") return;
+    if (usedSlots <= maxSlots) return;
+    let toRemove = usedSlots - maxSlots;
+    const next: Record<string, string[]> = {};
+    // Iterate in reverse over DAYS to drop the latest first
+    const reversed = [...DAYS].reverse();
+    for (const day of reversed) {
+      const slots = [...(data.scheduleDetails[day] || [])];
+      while (toRemove > 0 && slots.length > 0) {
+        slots.pop();
+        toRemove--;
+      }
+      next[day] = slots;
+    }
+    onChange({ scheduleDetails: next });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.daysPerWeek]);
 
   const setEmploymentType = (type: "full_time" | "part_time") => {
     if (type === "full_time") {
@@ -133,7 +164,8 @@ export const StepProfileAndJob = ({ data, onChange, onNext, onBack }: Props) => 
     data.mustHaveSkills.length > 0 &&
     data.title &&
     data.description &&
-    data.talentsNumber > 0;
+    data.talentsNumber > 0 &&
+    data.workLocation.trim().length > 0;
 
   const SkillColumns = ({
     mustHave,
@@ -428,27 +460,52 @@ export const StepProfileAndJob = ({ data, onChange, onNext, onBack }: Props) => 
 
             {data.scheduleType === "fixed" && (
               <div className="space-y-3 rounded-lg border border-card-foreground/10 p-4">
-                <p className="text-sm text-card-foreground/60">Sélectionnez les créneaux</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-card-foreground/60">Sélectionnez les créneaux</p>
+                  <p className="text-xs font-medium text-card-foreground/70">
+                    {usedSlots} / {maxSlots} demi-journées
+                  </p>
+                </div>
+                <p className="text-xs text-card-foreground/50">
+                  1 jour = 2 demi-journées (matin + après-midi).{slotsLocked ? " Limite atteinte." : ""}
+                </p>
                 <div className="grid gap-2">
-                  {DAYS.map((day) => (
-                    <div key={day} className="flex items-center gap-3">
-                      <span className="w-20 text-sm font-medium text-card-foreground">{day}</span>
-                      <Badge
-                        variant={(data.scheduleDetails[day] || []).includes("morning") ? "default" : "outline"}
-                        className={`cursor-pointer ${!(data.scheduleDetails[day] || []).includes("morning") ? "border-card-foreground/20 text-card-foreground" : ""}`}
-                        onClick={() => toggleScheduleSlot(day, "morning")}
-                      >
-                        Matin
-                      </Badge>
-                      <Badge
-                        variant={(data.scheduleDetails[day] || []).includes("afternoon") ? "default" : "outline"}
-                        className={`cursor-pointer ${!(data.scheduleDetails[day] || []).includes("afternoon") ? "border-card-foreground/20 text-card-foreground" : ""}`}
-                        onClick={() => toggleScheduleSlot(day, "afternoon")}
-                      >
-                        Après-midi
-                      </Badge>
-                    </div>
-                  ))}
+                  {DAYS.map((day) => {
+                    const slots = data.scheduleDetails[day] || [];
+                    const morningOn = slots.includes("morning");
+                    const afternoonOn = slots.includes("afternoon");
+                    const morningDisabled = !morningOn && slotsLocked;
+                    const afternoonDisabled = !afternoonOn && slotsLocked;
+                    return (
+                      <div key={day} className="flex items-center gap-3">
+                        <span className="w-20 text-sm font-medium text-card-foreground">{day}</span>
+                        <Badge
+                          variant={morningOn ? "default" : "outline"}
+                          aria-disabled={morningDisabled}
+                          className={`transition-opacity ${
+                            morningDisabled
+                              ? "cursor-not-allowed opacity-40 border-card-foreground/20 text-card-foreground"
+                              : `cursor-pointer ${!morningOn ? "border-card-foreground/20 text-card-foreground" : ""}`
+                          }`}
+                          onClick={() => !morningDisabled && toggleScheduleSlot(day, "morning")}
+                        >
+                          Matin
+                        </Badge>
+                        <Badge
+                          variant={afternoonOn ? "default" : "outline"}
+                          aria-disabled={afternoonDisabled}
+                          className={`transition-opacity ${
+                            afternoonDisabled
+                              ? "cursor-not-allowed opacity-40 border-card-foreground/20 text-card-foreground"
+                              : `cursor-pointer ${!afternoonOn ? "border-card-foreground/20 text-card-foreground" : ""}`
+                          }`}
+                          onClick={() => !afternoonDisabled && toggleScheduleSlot(day, "afternoon")}
+                        >
+                          Après-midi
+                        </Badge>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -517,6 +574,17 @@ export const StepProfileAndJob = ({ data, onChange, onNext, onBack }: Props) => 
               <SelectItem value="onsite">Présentiel</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-card-foreground">Adresse du lieu de travail *</Label>
+          <Input
+            value={data.workLocation}
+            onChange={(e) => onChange({ workLocation: e.target.value })}
+            placeholder="Ex: Avenue Louise 250, 1050 Bruxelles"
+            className="bg-card border-card-foreground/20 text-card-foreground"
+          />
+          <p className="text-xs text-card-foreground/50">L'adresse exacte du bureau ou du site où le talent travaillera (utile même en remote partiel).</p>
         </div>
       </div>
 

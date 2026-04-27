@@ -44,6 +44,7 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
       schedule_type: data.scheduleType,
       schedule_details: data.scheduleDetails as any,
       work_mode: data.workMode,
+      work_location: data.workLocation || "",
       weekly_hours: 0,
       weekly_price: 0,
       monthly_price: 0,
@@ -154,6 +155,9 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
           )}
           <div className="flex justify-between"><span className="text-card-foreground/60">{data.talentType === "graduate" ? "Contrat" : "Horaires"}</span><span className="text-card-foreground">{scheduleLabel}</span></div>
           <div className="flex justify-between"><span className="text-card-foreground/60">Mode</span><span className="text-card-foreground capitalize">{data.workMode}</span></div>
+          {data.workLocation && (
+            <div className="flex justify-between"><span className="text-card-foreground/60">Adresse</span><span className="text-card-foreground text-right max-w-[60%]">{data.workLocation}</span></div>
+          )}
         </div>
       </Section>
 
