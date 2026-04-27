@@ -1,46 +1,127 @@
+# Workflow recrutement avancé — Profils, entretiens, notifications
 
-# Fix : checkmark "Skills" trop permissif
+Ajout du cycle de vie complet post-validation : l'admin propose des profils anonymisés, l'entreprise valide ou rejette, organise un entretien, et l'admin reçoit des notifications en temps réel. La confidentialité des talents est garantie jusqu'au recrutement finalisé.
 
-## Problème observé
+## 1. Modèle de données (nouvelles tables)
 
-En tapant juste "développeur", le tag **Skills** passe au vert. Deux causes :
+### `proposed_profiles` — profils proposés par l'admin
 
-1. **Côté edge function** : le system prompt n'interdit pas à l'IA d'inférer des skills à partir du titre du job. Quand on dit "développeur", l'IA peut deviner "JavaScript", "Python", ou pousser "développeur" lui-même dans `customHardSkills`.
-2. **Côté front** : la condition `ok` du tag Skills se déclenche dès qu'il y a **au moins 1 hard skill** (catalogue OU custom), sans distinguer ce qui a été réellement écrit par l'utilisateur.
+**Aucune donnée de contact visible côté entreprise** avant `Recrutement finalisé`.
 
-## Correctifs
+Colonnes :
 
-### 1. Edge function `generate-talent-profile` — durcir le prompt
+- `id`, `request_id`, `created_at`, `updated_at`
+- **Publiques** : `alias` ("Talent #1"), `headline`, `summary` (présentation anonyme), `experience_years`, `skills` text[], `languages` jsonb, `availability`, `location_area` (zone large, ex "Bruxelles")
+- **Privées (admin only)** : `full_name`, `email`, `phone`, `linkedin_url`
+- `status` : `pending` | `accepted` | `rejected`
+- `rejection_reasons` text[], `rejection_other` text
 
-Ajouter aux RÈGLES STRICTES :
+**Sécurité** : vue SQL `proposed_profiles_public` qui n'expose JAMAIS les colonnes privées tant que `request.status != 'Recrutement finalisé'`. Le front interroge la vue, pas la table directement. RLS sur la table : admin full access, entreprise SELECT via la vue uniquement, UPDATE limité au `status` sur ses propres profils.
 
-- `hardSkills` et `customHardSkills` doivent contenir **UNIQUEMENT** des technologies/outils/compétences techniques **explicitement écrits** dans la description de l'utilisateur. **INTERDIT** d'inférer un skill à partir du titre du poste (ex : "développeur" → JS/Python : interdit).
-- Ne JAMAIS mettre un intitulé de métier ("développeur", "comptable", "marketeur", "ingénieur"...) dans `customHardSkills`.
-- Si la description ne mentionne aucun outil/techno précis → renvoyer `hardSkills: []` et `customHardSkills: []`.
-- Idem pour `softSkills` / `customSoftSkills` : uniquement si explicitement mentionnés.
-- `langues` : uniquement si explicitement mentionnées (FR, EN, NL, "français", "anglais"...). Ne pas inférer.
-- `location` : uniquement si une ville/pays/adresse est explicitement mentionnée.
+### `interview_requests` — créneaux proposés
 
-### 2. Edge function — filtre serveur de sécurité
+- `id`, `proposed_profile_id`, `request_id`
+- `mode` : `video` | `onsite`
+- `proposed_slots` jsonb (array `{ date, period: 'morning'|'afternoon' }`, 2-3 max)
+- `confirmed_slot` jsonb (rempli par admin)
+- `status` : `pending_admin` | `confirmed` | `cancelled`
 
-Côté serveur, après extraction, **filtrer `customHardSkills`** pour exclure tout terme qui ressemble à un intitulé de poste :
+### `admin_notifications` — fil d'événements admin
 
-- Liste noire de mots-clés métiers à rejeter (case-insensitive, normalisé) : `développeur`, `developer`, `dev`, `comptable`, `marketeur`, `ingénieur`, `engineer`, `assistant`, `manager`, `consultant`, `analyste`, `analyst`, `commercial`, `sales`, `vendeur`, `designer`, `chef de projet`, `product owner`, `scrum master`, `data scientist`, `data analyst`...
-- Si le terme custom == jobTitle (normalisé, ou contenu dans le jobTitle) → rejeté aussi.
+- `type` : `profiles_rejected` | `profile_accepted` | `interview_slots_proposed`
+- `request_id`, `payload` jsonb, `read` bool, `created_at`
+- RLS : admin uniquement
+- Realtime activé pour notifications instantanées
 
-Cela garantit que même si l'IA dérape, le mot "développeur" ne remonte jamais comme skill.
+### Statuts de demande étendus
 
-### 3. Front `StepNaturalLanguage.tsx` — confirmer le check Skills uniquement sur signal réel
+Mise à jour de `STATUSES` et de `validate_request_status()` :
 
-Aucun changement de logique nécessaire si l'edge function renvoie correctement `[]`. Le tag passera vert seulement quand un vrai skill est présent.
+- `Demande validée`
+- `Profils en cours de sélection` (après rejet total)
+- `Profils envoyés` (admin a poussé des profils)
+- `Profils validés`
+- `Entretien en cours d'organisation`
+- `Recrutement finalisé`
 
-## Fichiers modifiés
+## 2. Côté entreprise — `RequestDetail.tsx`
 
-- `supabase/functions/generate-talent-profile/index.ts` (system prompt + filtre blacklist côté serveur)
+Nouvelle section **"Profils proposés"** (visible si la demande a des profils) :
 
-## Critères d'acceptation
+- Cards anonymes avec alias, headline, summary, skills, langues, dispo, zone
+- Boutons ✅ Intéressé / ❌ Pas intéressé par profil
 
-1. "développeur" → tags : tous gris (aucun skill, pas de localisation, pas de langue). Titre détecté = "Développeur" (vert).
-2. "développeur Python" → Skills vert (Python), Titre vert. Localisation et Langues gris.
-3. "développeur Python à Bruxelles FR/EN" → 4 tags verts.
-4. "comptable junior" → Titre vert uniquement. Skills/Localisation/Langues gris.
+### Rejet total (tous les profils ❌)
+
+Dialog obligatoire avec checkboxes :
+
+- Niveau de diplôme trop faible
+- Hard skills insuffisants
+- Soft skills ne correspondent pas
+- Localisation ou disponibilité inadaptée
+- Autre (textarea obligatoire)
+
+Au submit : statut → `Profils en cours de sélection`, notification admin créée, message affiché *"Pas de problème ! Nous analysons votre retour et revenons vers vous avec de nouveaux profils sous 48h."*
+
+### Acceptation (au moins un profil ✅)
+
+1. Statut → `Profils validés`
+2. Notification admin
+3. Modal **"Organisation entretien"** s'ouvre automatiquement :
+  - Choix : 📹 Appel vidéo / 🏢 Sur place
+  - DatePicker Shadcn pour 2-3 créneaux (date + matin/après-midi)
+4. Au submit : `interview_requests` créé, statut → `Entretien en cours d'organisation`, notification admin
+5. Affichage : *"Entretien en cours d'organisation — Onbord revient vers vous sous 24h avec un créneau confirmé."*
+
+### Confidentialité
+
+- Front : ne JAMAIS afficher nom/email/tel/LinkedIn tant que `status != 'Recrutement finalisé'`
+- DB : la vue publique ne retourne pas ces champs
+- Une fois finalisé : section "Coordonnées du talent" révélée sur le profil accepté
+
+## 3. Côté admin
+
+### Sur `RequestDetail` en mode admin
+
+**Bloc "Gestion profils"** :
+
+- Liste des profils avec données complètes
+- Bouton "+ Ajouter un profil" → formulaire complet
+- Edit / Delete par profil
+- Affichage des feedbacks de rejet
+
+**Bloc "Entretiens"** :
+
+- Liste des `interview_requests` avec créneaux proposés
+- Bouton "Confirmer ce créneau" → met à jour le statut
+- Bouton "Envoyer les invitations" (placeholder — pas d'email pour l'instant)
+
+### Page Admin (`/admin`)
+
+- Cloche de notifications dans le header avec badge (count des non-lues)
+- Dropdown listant les notifications récentes → lien vers la demande
+- Realtime via Supabase channel sur `admin_notifications`
+
+## 4. Fichiers impactés
+
+**Nouveaux** :
+
+- Migration SQL : tables + vue + RLS + realtime
+- `src/components/request/ProposedProfilesSection.tsx`
+- `src/components/request/RejectAllProfilesDialog.tsx`
+- `src/components/request/OrganizeInterviewDialog.tsx`
+- `src/components/admin/AdminProfilesManager.tsx`
+- `src/components/admin/AdminInterviewsPanel.tsx`
+- `src/components/admin/AdminNotificationsBell.tsx`
+- `src/hooks/useAdminNotifications.ts`
+
+**Modifiés** :
+
+- `src/lib/constants.ts` (nouveaux statuts)
+- `src/pages/RequestDetail.tsx` (intégration sections + reveal contact)
+- `src/pages/Admin.tsx` / `src/components/AppLayout.tsx` (cloche notifications)
+
+## 5. Hors-scope (à confirmer plus tard)
+
+- **Envoi d'emails réels** aux talents/entreprises pour les invitations : non couvert ici (nécessite setup email infra). Pour l'instant : notifications in-app + bouton placeholder côté admin.
+  &nbsp;
