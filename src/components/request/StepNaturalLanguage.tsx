@@ -38,8 +38,8 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const lastQueryRef = useRef<string>("");
 
-  const runDetection = async (query: string) => {
-    if (query === lastQueryRef.current) return;
+  const runDetection = async (query: string): Promise<Detection | null> => {
+    if (query === lastQueryRef.current && detection) return detection;
     lastQueryRef.current = query;
     setAnalyzing(true);
     try {
@@ -50,11 +50,17 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
         const status = (error as any)?.context?.status;
         if (status === 429) toast.error("Trop de requêtes, réessayez dans un instant.");
         else if (status === 402) toast.error("Crédits IA épuisés.");
-        return;
+        else toast.error("Erreur lors de l'analyse.");
+        return null;
       }
-      if (result) setDetection(result as Detection);
+      if (result) {
+        setDetection(result as Detection);
+        return result as Detection;
+      }
+      return null;
     } catch (e) {
       console.error(e);
+      return null;
     } finally {
       setAnalyzing(false);
     }
