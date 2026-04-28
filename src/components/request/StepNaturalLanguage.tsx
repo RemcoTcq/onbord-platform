@@ -217,11 +217,6 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
           Notre IA analyse votre description en temps réel et structure le formulaire pour vous.
         </p>
       </div>
-        <h2 className="text-xl font-semibold text-card-foreground">Décrivez votre besoin</h2>
-        <p className="text-sm text-card-foreground/60">
-          Notre IA analyse votre description en temps réel et structure le formulaire pour vous.
-        </p>
-      </div>
 
       <div className="relative">
         <Textarea
