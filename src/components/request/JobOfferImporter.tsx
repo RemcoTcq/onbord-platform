@@ -23,6 +23,7 @@ import { toast } from "sonner";
 interface Props {
   onImported: (text: string) => void;
   disabled?: boolean;
+  label?: string;
 }
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
