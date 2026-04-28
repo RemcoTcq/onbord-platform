@@ -28,8 +28,6 @@ interface AdminRequest {
   domain: string;
   status: string;
   created_at: string;
-  weekly_price: number;
-  monthly_price: number;
   talents_number: number;
   user_id: string;
   talent_type: string;
