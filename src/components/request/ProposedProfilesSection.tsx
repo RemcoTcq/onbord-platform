@@ -229,7 +229,7 @@ export const ProposedProfilesSection = ({
                           key={i}
                           variant="outline"
                           className={`text-xs ${
-                            isMatch(s) ? "bg-success/15 border-success text-success-foreground" : ""
+                            isMatch(s) ? "bg-success/15 border-success text-secondary-foreground" : ""
                           }`}
                         >
                           {s}
