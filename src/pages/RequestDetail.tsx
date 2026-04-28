@@ -296,7 +296,31 @@ const RequestDetail = () => {
               </div>
             )}
           </CardContent>
+          </CardContent>
         </Card>
+
+        {/* Proposed profiles (visible to owner + admin) */}
+        <ProposedProfilesSection
+          requestId={request.id}
+          requestStatus={request.status}
+          requestSkills={[...(request.skills || []), ...(request.custom_skills || []), ...(request.nice_to_have_skills || [])]}
+          onStatusChange={(s) => setRequest({ ...request, status: s })}
+        />
+
+        {/* Admin-only management */}
+        {isAdmin && (
+          <>
+            <AdminProfilesManager requestId={request.id} requestStatus={request.status} />
+            <AdminInterviewsPanel
+              requestId={request.id}
+              onConfirmed={() => {
+                supabase.from("requests").update({ status: "Recrutement finalisé" }).eq("id", request.id).then(() => {
+                  setRequest({ ...request, status: "Recrutement finalisé" });
+                });
+              }}
+            />
+          </>
+        )}
       </div>
     </AppLayout>
   );
