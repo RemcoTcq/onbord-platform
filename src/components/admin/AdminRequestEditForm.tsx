@@ -1,7 +1,7 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { DOMAINS, HARD_SKILLS_MAP, SOFT_SKILLS, LANGUAGES, DIPLOMAS, DAYS } from "@/lib/constants";
-import { calculatePricing } from "@/lib/pricing-utils";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,12 +44,6 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
   const [customLangInput, setCustomLangInput] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const pricing = useMemo(() => calculatePricing({
-    scheduleType: form.schedule_type,
-    scheduleDetails: form.schedule_details,
-    daysPerWeek: form.days_per_week,
-    talentsNumber: form.talents_number,
-  }), [form.schedule_type, form.schedule_details, form.days_per_week, form.talents_number]);
 
   const hardSkills = form.domain ? HARD_SKILLS_MAP[form.domain] || [] : [];
 
@@ -140,12 +134,7 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const payload = {
-      ...form,
-      weekly_hours: pricing.weeklyHours,
-      weekly_price: pricing.weeklyPrice,
-      monthly_price: pricing.monthlyPrice,
-    };
+    const payload = { ...form };
     const { error } = await supabase.from("requests").update(payload).eq("id", request.id);
     if (error) {
       toast.error("Erreur lors de la sauvegarde");
@@ -320,7 +309,7 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
       {/* Planning & Pricing */}
       <Card>
         <CardContent className="p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-card-foreground">Planning & Tarification</h3>
+          <h3 className="text-lg font-semibold text-card-foreground">Planning</h3>
           
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">

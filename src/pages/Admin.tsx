@@ -28,8 +28,6 @@ interface AdminRequest {
   domain: string;
   status: string;
   created_at: string;
-  weekly_price: number;
-  monthly_price: number;
   talents_number: number;
   user_id: string;
   talent_type: string;
@@ -46,7 +44,7 @@ const Admin = () => {
 
   const fetchAll = async () => {
     const [reqRes, profRes] = await Promise.all([
-      supabase.from("requests").select("id, title, domain, status, created_at, weekly_price, monthly_price, talents_number, user_id, talent_type").order("created_at", { ascending: false }),
+      supabase.from("requests").select("id, title, domain, status, created_at, talents_number, user_id, talent_type").order("created_at", { ascending: false }),
       supabase.from("profiles").select("user_id, first_name, last_name, company_name"),
     ]);
     setRequests(reqRes.data || []);
@@ -135,7 +133,6 @@ const Admin = () => {
                 <CardContent className="flex items-center justify-between">
                   <div className="flex gap-4 text-sm text-muted-foreground">
                     <span>{new Date(req.created_at).toLocaleDateString("fr-FR")}</span>
-                    <span>{Number(req.monthly_price).toLocaleString("fr-FR")}€/mois</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Link to={`/request/${req.id}`}>
