@@ -40,7 +40,7 @@ const fileToBase64 = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
-export const JobOfferImporter = ({ onImported, disabled }: Props) => {
+export const JobOfferImporter = ({ onImported, disabled, label }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasted, setPasted] = useState("");
