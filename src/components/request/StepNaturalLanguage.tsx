@@ -113,10 +113,13 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
     setFillStepIdx(0);
     const q = data.naturalLanguageQuery.trim();
 
+    const STEP_DURATION = 1400;
+    const startedAt = Date.now();
+
     // Animate the steps progressively
     const stepTimer = setInterval(() => {
       setFillStepIdx((i) => Math.min(i + 1, fillSteps.length - 1));
-    }, 600);
+    }, STEP_DURATION);
 
     try {
       if (q.length >= MIN_CHARS && (!detection || lastQueryRef.current !== q)) {
@@ -124,9 +127,14 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
         await runDetection(q);
       }
       if (detection) applyDetection(detection);
-      // Ensure all steps shown briefly
+      // Wait for all steps to be visually displayed
+      const minTotal = STEP_DURATION * fillSteps.length + 600;
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < minTotal) {
+        await new Promise((r) => setTimeout(r, minTotal - elapsed));
+      }
       setFillStepIdx(fillSteps.length - 1);
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 400));
     } finally {
       clearInterval(stepTimer);
       setApplying(false);
