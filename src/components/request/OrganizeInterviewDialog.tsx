@@ -141,6 +141,21 @@ export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props)
           </div>
         )}
 
+        {mode === "onsite" && (
+          <div className="space-y-2">
+            <Label htmlFor="onsite-address" className="text-sm font-medium flex items-center gap-1.5">
+              <MapPin className="h-4 w-4" /> Adresse de l'entretien
+            </Label>
+            <Input
+              id="onsite-address"
+              value={onsiteAddress}
+              onChange={(e) => setOnsiteAddress(e.target.value)}
+              placeholder="Rue, numéro, code postal, ville"
+            />
+            <p className="text-xs text-muted-foreground">Cette adresse sera communiquée au talent.</p>
+          </div>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Plus tard</Button>
           <Button onClick={handleSubmit} disabled={!canSubmit || submitting}>
