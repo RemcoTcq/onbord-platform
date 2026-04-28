@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, Plus, Trash2, Video, Building2 } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, Video, Building2, MapPin } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +16,7 @@ export type Slot = { date: string; period: "morning" | "afternoon" };
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  onSubmit: (mode: InterviewMode, slots: Slot[]) => Promise<void> | void;
+  onSubmit: (mode: InterviewMode, slots: Slot[], onsiteAddress?: string) => Promise<void> | void;
 }
 
 export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props) => {
