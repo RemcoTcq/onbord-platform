@@ -8,6 +8,7 @@ import { TalentTypeBadge } from "@/components/TalentTypeBadge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, Clock, FileDown, Loader2, Trash2, Pencil, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import {
