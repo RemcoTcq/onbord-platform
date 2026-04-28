@@ -87,6 +87,113 @@ const lastInitialFromFullName = (full: string): string => {
   return parts[parts.length - 1].charAt(0).toUpperCase() + ".";
 };
 
+// ---------- Extracted editors (declared outside parent to preserve input focus) ----------
+
+const HardSkillsEditor = ({ items, onChange }: { items: HardSkill[]; onChange: (v: HardSkill[]) => void }) => {
+  const add = () => onChange([...items, { name: "", level: "Intermédiaire" }]);
+  const update = (i: number, patch: Partial<HardSkill>) =>
+    onChange(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
+  return (
+    <div className="space-y-2">
+      {items.map((it, i) => (
+        <div key={i} className="flex gap-2 items-center">
+          <Input
+            placeholder="Compétence"
+            value={it.name}
+            onChange={(e) => update(i, { name: e.target.value })}
+            className="flex-1"
+          />
+          <Select value={it.level} onValueChange={(v) => update(i, { level: v as SkillLevel })}>
+            <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Débutant">Débutant</SelectItem>
+              <SelectItem value="Intermédiaire">Intermédiaire</SelectItem>
+              <SelectItem value="Avancé">Avancé</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button size="icon" variant="ghost" onClick={() => remove(i)}><X className="h-4 w-4" /></Button>
+        </div>
+      ))}
+      <Button size="sm" variant="outline" onClick={add} className="gap-1"><Plus className="h-3 w-3" /> Ajouter</Button>
+    </div>
+  );
+};
+
+const SoftSkillsEditor = ({ items, onChange }: { items: SoftSkill[]; onChange: (v: SoftSkill[]) => void }) => {
+  const add = () => onChange([...items, { name: "", example: "" }]);
+  const update = (i: number, patch: Partial<SoftSkill>) =>
+    onChange(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
+  return (
+    <div className="space-y-2">
+      {items.map((it, i) => (
+        <div key={i} className="grid grid-cols-[1fr_2fr_auto] gap-2 items-center">
+          <Input placeholder="Soft skill" value={it.name} onChange={(e) => update(i, { name: e.target.value })} />
+          <Input placeholder="Exemple concret" value={it.example} onChange={(e) => update(i, { example: e.target.value })} />
+          <Button size="icon" variant="ghost" onClick={() => remove(i)}><X className="h-4 w-4" /></Button>
+        </div>
+      ))}
+      <Button size="sm" variant="outline" onClick={add} className="gap-1"><Plus className="h-3 w-3" /> Ajouter (3–5)</Button>
+    </div>
+  );
+};
+
+const LanguagesEditor = ({ items, onChange }: { items: LanguageItem[]; onChange: (v: LanguageItem[]) => void }) => {
+  const add = () => onChange([...items, { name: "", level: 3 }]);
+  const update = (i: number, patch: Partial<LanguageItem>) =>
+    onChange(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
+  return (
+    <div className="space-y-2">
+      {items.map((it, i) => (
+        <div key={i} className="flex gap-2 items-center">
+          <Input placeholder="Langue" value={it.name} onChange={(e) => update(i, { name: e.target.value })} className="flex-1" />
+          <Select value={String(it.level)} onValueChange={(v) => update(i, { level: parseInt(v) })}>
+            <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[1, 2, 3, 4, 5].map((n) => <SelectItem key={n} value={String(n)}>{n}/5</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button size="icon" variant="ghost" onClick={() => remove(i)}><X className="h-4 w-4" /></Button>
+        </div>
+      ))}
+      <Button size="sm" variant="outline" onClick={add} className="gap-1"><Plus className="h-3 w-3" /> Ajouter</Button>
+    </div>
+  );
+};
+
+const ExperiencesEditor = ({ items, onChange }: { items: Experience[]; onChange: (v: Experience[]) => void }) => {
+  const add = () => onChange([...items, { role: "", sector: "", duration: "", description: "" }]);
+  const update = (i: number, patch: Partial<Experience>) =>
+    onChange(items.map((it, idx) => (idx === i ? { ...it, ...patch } : it)));
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
+  return (
+    <div className="space-y-3">
+      {items.map((it, i) => (
+        <div key={i} className="rounded border border-border p-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-muted-foreground">Expérience {i + 1}</span>
+            <Button size="icon" variant="ghost" onClick={() => remove(i)}><X className="h-4 w-4" /></Button>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <Input placeholder="Rôle" value={it.role} onChange={(e) => update(i, { role: e.target.value })} />
+            <Input placeholder="Secteur" value={it.sector} onChange={(e) => update(i, { sector: e.target.value })} />
+            <Input placeholder="Durée (ex: 6 mois)" value={it.duration} onChange={(e) => update(i, { duration: e.target.value })} />
+          </div>
+          <Textarea
+            rows={2}
+            placeholder="Description (sans nom d'entreprise)"
+            value={it.description}
+            onChange={(e) => update(i, { description: e.target.value })}
+          />
+        </div>
+      ))}
+      <Button size="sm" variant="outline" onClick={add} className="gap-1"><Plus className="h-3 w-3" /> Ajouter</Button>
+    </div>
+  );
+};
+
 export const AdminProfilesManager = ({
   requestId,
   requestStatus,
