@@ -282,7 +282,6 @@ export type Database = {
           employment_type: string | null
           id: string
           languages: Json | null
-          monthly_price: number
           natural_language_query: string | null
           nice_to_have_skills: string[] | null
           nice_to_have_soft_skills: string[] | null
@@ -295,8 +294,6 @@ export type Database = {
           talents_number: number
           title: string
           user_id: string
-          weekly_hours: number
-          weekly_price: number
           work_location: string
           work_mode: string
         }
@@ -310,7 +307,6 @@ export type Database = {
           employment_type?: string | null
           id?: string
           languages?: Json | null
-          monthly_price?: number
           natural_language_query?: string | null
           nice_to_have_skills?: string[] | null
           nice_to_have_soft_skills?: string[] | null
@@ -323,8 +319,6 @@ export type Database = {
           talents_number?: number
           title: string
           user_id: string
-          weekly_hours?: number
-          weekly_price?: number
           work_location?: string
           work_mode?: string
         }
@@ -338,7 +332,6 @@ export type Database = {
           employment_type?: string | null
           id?: string
           languages?: Json | null
-          monthly_price?: number
           natural_language_query?: string | null
           nice_to_have_skills?: string[] | null
           nice_to_have_soft_skills?: string[] | null
@@ -351,8 +344,6 @@ export type Database = {
           talents_number?: number
           title?: string
           user_id?: string
-          weekly_hours?: number
-          weekly_price?: number
           work_location?: string
           work_mode?: string
         }

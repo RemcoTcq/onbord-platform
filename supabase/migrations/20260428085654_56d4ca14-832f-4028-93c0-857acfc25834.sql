@@ -1,0 +1,1 @@
+ALTER TABLE public.requests DROP COLUMN IF EXISTS weekly_hours, DROP COLUMN IF EXISTS weekly_price, DROP COLUMN IF EXISTS monthly_price;
