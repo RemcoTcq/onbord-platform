@@ -23,6 +23,7 @@ import { toast } from "sonner";
 interface Props {
   onImported: (text: string) => void;
   disabled?: boolean;
+  label?: string;
 }
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
@@ -39,7 +40,7 @@ const fileToBase64 = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
-export const JobOfferImporter = ({ onImported, disabled }: Props) => {
+export const JobOfferImporter = ({ onImported, disabled, label }: Props) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasted, setPasted] = useState("");
@@ -118,15 +119,16 @@ export const JobOfferImporter = ({ onImported, disabled }: Props) => {
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
+                  size="sm"
                   disabled={busy}
-                  className="h-8 w-8 text-card-foreground/50 hover:text-card-foreground hover:bg-card-foreground/5"
+                  className="h-8 gap-1.5 px-2 text-xs font-medium text-card-foreground/60 hover:text-card-foreground hover:bg-card-foreground/5"
                 >
                   {extracting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Paperclip className="h-4 w-4" />
                   )}
+                  {label && <span>{label}</span>}
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>

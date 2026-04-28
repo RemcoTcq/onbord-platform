@@ -213,6 +213,14 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
       </div>
 
       <div className="relative rounded-md border border-card-foreground/20 bg-card focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background transition-shadow">
+        <div className="flex items-center justify-between gap-2 border-b border-card-foreground/10 px-2 py-1.5">
+          <div className="flex items-center gap-1">
+            <JobOfferImporter onImported={handleImportedOffer} disabled={applying} label="Offre d'emploi" />
+          </div>
+          {analyzing && (
+            <span className="text-xs text-card-foreground/50 pr-2">Analyse…</span>
+          )}
+        </div>
         <Textarea
           value={data.naturalLanguageQuery}
           onChange={(e) => onChange({ naturalLanguageQuery: e.target.value })}
@@ -220,17 +228,11 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
           rows={4}
           className="bg-transparent border-0 text-card-foreground resize-none pr-10 text-base focus-visible:ring-0 focus-visible:ring-offset-0"
         />
-        <div className="absolute right-3 top-3 text-card-foreground/40 pointer-events-none">
+        <div className="absolute right-3 bottom-3 text-card-foreground/40 pointer-events-none">
           {analyzing ? (
             <Loader2 className="h-4 w-4 animate-spin text-primary" />
           ) : (
             <Sparkles className="h-4 w-4" />
-          )}
-        </div>
-        <div className="flex items-center justify-between gap-2 border-t border-card-foreground/10 px-2 py-1.5">
-          <JobOfferImporter onImported={handleImportedOffer} disabled={applying} />
-          {analyzing && (
-            <span className="text-xs text-card-foreground/50 pr-2">Analyse…</span>
           )}
         </div>
       </div>
