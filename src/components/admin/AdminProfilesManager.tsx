@@ -378,22 +378,42 @@ export const AdminProfilesManager = ({
 
                 <AccordionItem value="hard">
                   <AccordionTrigger>4. Hard skills (avec niveau)</AccordionTrigger>
-                  <AccordionContent><HardSkillsEditor /></AccordionContent>
+                  <AccordionContent>
+                    <HardSkillsEditor
+                      items={(editing.hard_skills_detail as HardSkill[]) || []}
+                      onChange={(v) => updateField("hard_skills_detail", v as any)}
+                    />
+                  </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="soft">
                   <AccordionTrigger>5. Soft skills (3–5 + exemple)</AccordionTrigger>
-                  <AccordionContent><SoftSkillsEditor /></AccordionContent>
+                  <AccordionContent>
+                    <SoftSkillsEditor
+                      items={(editing.soft_skills_detail as SoftSkill[]) || []}
+                      onChange={(v) => updateField("soft_skills_detail", v as any)}
+                    />
+                  </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="languages">
                   <AccordionTrigger>6. Langues (niveau /5)</AccordionTrigger>
-                  <AccordionContent><LanguagesEditor /></AccordionContent>
+                  <AccordionContent>
+                    <LanguagesEditor
+                      items={(editing.languages as LanguageItem[]) || []}
+                      onChange={(v) => updateField("languages", v as any)}
+                    />
+                  </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="experiences">
                   <AccordionTrigger>7. Expériences (anonymisées)</AccordionTrigger>
-                  <AccordionContent><ExperiencesEditor /></AccordionContent>
+                  <AccordionContent>
+                    <ExperiencesEditor
+                      items={(editing.experiences as Experience[]) || []}
+                      onChange={(v) => updateField("experiences", v as any)}
+                    />
+                  </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="looking">
