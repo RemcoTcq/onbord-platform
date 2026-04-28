@@ -119,15 +119,16 @@ export const JobOfferImporter = ({ onImported, disabled, label }: Props) => {
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon"
+                  size="sm"
                   disabled={busy}
-                  className="h-8 w-8 text-card-foreground/50 hover:text-card-foreground hover:bg-card-foreground/5"
+                  className="h-8 gap-1.5 px-2 text-xs font-medium text-card-foreground/60 hover:text-card-foreground hover:bg-card-foreground/5"
                 >
                   {extracting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Paperclip className="h-4 w-4" />
                   )}
+                  {label && <span>{label}</span>}
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
