@@ -134,12 +134,7 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
 
   const handleSave = async () => {
     setSaving(true);
-    const payload = {
-      ...form,
-      weekly_hours: pricing.weeklyHours,
-      weekly_price: pricing.weeklyPrice,
-      monthly_price: pricing.monthlyPrice,
-    };
+    const payload = { ...form };
     const { error } = await supabase.from("requests").update(payload).eq("id", request.id);
     if (error) {
       toast.error("Erreur lors de la sauvegarde");
