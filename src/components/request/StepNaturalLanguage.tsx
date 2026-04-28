@@ -181,7 +181,10 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
       setApplying(false);
     }
   };
+
+  return (
     <div className="space-y-6 relative">
+      <JobOfferImporter onImported={handleImportedOffer} disabled={applying} />
       {applying && (
         <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-card/95 backdrop-blur-sm -m-4 p-4">
           <div className="w-full max-w-md space-y-5 text-center">
