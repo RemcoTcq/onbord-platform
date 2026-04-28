@@ -56,7 +56,7 @@ export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props)
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Super&nbsp;! Comment souhaitez-vous rencontrer ce talent&nbsp;?</DialogTitle>
-          <DialogDescription>Sélectionnez 2 à 3 créneaux. Onbord coordonne avec le talent.</DialogDescription>
+          <DialogDescription>Appel vidéo : 2 à 3 créneaux. Sur place : 3 créneaux et l'adresse de l'entretien.</DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-3">
