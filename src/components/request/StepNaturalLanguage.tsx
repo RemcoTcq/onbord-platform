@@ -146,7 +146,7 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
     <div className="space-y-6 relative">
       {applying && (
         <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-card/95 backdrop-blur-sm -m-4 p-4">
-          <div className="w-full max-w-md space-y-6 text-center">
+          <div className="w-full max-w-md space-y-5 text-center">
             <div className="relative mx-auto h-16 w-16">
               <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
               <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
@@ -157,31 +157,10 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
               <h3 className="text-lg font-semibold text-card-foreground">L'IA remplit votre formulaire</h3>
               <p className="text-sm text-card-foreground/60 mt-1">Quelques secondes seulement…</p>
             </div>
-            <ul className="space-y-2 text-left">
-              {fillSteps.map((label, i) => {
-                const done = i < fillStepIdx;
-                const current = i === fillStepIdx;
-                return (
-                  <li
-                    key={i}
-                    className={`flex items-center gap-2 text-sm transition-opacity ${
-                      done || current ? "opacity-100" : "opacity-40"
-                    }`}
-                  >
-                    {done ? (
-                      <Check className="h-4 w-4 text-success shrink-0" />
-                    ) : current ? (
-                      <Loader2 className="h-4 w-4 text-primary animate-spin shrink-0" />
-                    ) : (
-                      <Circle className="h-4 w-4 text-card-foreground/30 shrink-0" />
-                    )}
-                    <span className={done ? "text-card-foreground/70 line-through" : "text-card-foreground"}>
-                      {label}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="flex items-center justify-center gap-2 text-sm text-card-foreground/70">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span>{fillSteps[fillStepIdx]}</span>
+            </div>
           </div>
         </div>
       )}
@@ -213,6 +192,39 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
       {analyzing && (
         <p className="text-xs text-card-foreground/50">Analyse…</p>
       )}
+
+      <TooltipProvider delayDuration={150}>
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { key: "title", label: "Titre du job", icon: Briefcase, ok: !!detection?.jobTitle, value: detection?.jobTitle || "" },
+            { key: "skills", label: "Skills", icon: Wrench, ok: !!detection && (detection.hardSkills.length + detection.customHardSkills.length) > 0, value: detection ? [...detection.hardSkills, ...detection.customHardSkills].slice(0, 4).join(", ") : "" },
+            { key: "location", label: "Localisation", icon: MapPin, ok: !!detection?.location, value: detection?.location || "" },
+            { key: "languages", label: "Langues", icon: Languages, ok: !!detection && detection.langues.length > 0, value: detection?.langues.map((l) => l.name).join(", ") || "" },
+          ].map((c) => {
+            const Icon = c.icon;
+            return (
+              <Tooltip key={c.key}>
+                <TooltipTrigger asChild>
+                  <div
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      c.ok
+                        ? "border-success/40 bg-success/10 text-success"
+                        : "border-card-foreground/15 bg-card-foreground/[0.03] text-card-foreground/40"
+                    }`}
+                  >
+                    {c.ok ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+                    <Icon className="h-3.5 w-3.5" />
+                    {c.label}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {c.ok && c.value ? c.value : "Pas encore détecté"}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </TooltipProvider>
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between sm:items-center">
         <Button
