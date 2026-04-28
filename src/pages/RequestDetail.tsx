@@ -8,6 +8,7 @@ import { TalentTypeBadge } from "@/components/TalentTypeBadge";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, Clock, FileDown, Loader2, Trash2, Pencil, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -196,7 +197,25 @@ const RequestDetail = () => {
         {/* Timeline */}
         <Card>
           <CardContent className="p-6">
-            <h3 className="text-lg font-semibold text-card-foreground mb-4">Progression</h3>
+            <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
+              <h3 className="text-lg font-semibold text-card-foreground">Progression</h3>
+              {isAdmin && (
+                <Select
+                  value={request.status}
+                  onValueChange={async (v) => {
+                    const { error } = await supabase.from("requests").update({ status: v }).eq("id", request.id);
+                    if (error) { toast.error("Erreur de mise à jour"); return; }
+                    setRequest({ ...request, status: v });
+                    toast.success("Statut mis à jour");
+                  }}
+                >
+                  <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
             <div className="relative flex items-start justify-between">
               <div className="absolute top-5 left-[10%] right-[10%] h-0.5 bg-card-foreground/10" />
               {currentIdx > 0 && (
