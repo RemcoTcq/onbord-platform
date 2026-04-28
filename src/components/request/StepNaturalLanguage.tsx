@@ -193,6 +193,39 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
         <p className="text-xs text-card-foreground/50">Analyse…</p>
       )}
 
+      <TooltipProvider delayDuration={150}>
+        <div className="flex flex-wrap items-center gap-2">
+          {[
+            { key: "title", label: "Titre du job", icon: Briefcase, ok: !!detection?.jobTitle, value: detection?.jobTitle || "" },
+            { key: "skills", label: "Skills", icon: Wrench, ok: !!detection && (detection.hardSkills.length + detection.customHardSkills.length) > 0, value: detection ? [...detection.hardSkills, ...detection.customHardSkills].slice(0, 4).join(", ") : "" },
+            { key: "location", label: "Localisation", icon: MapPin, ok: !!detection?.location, value: detection?.location || "" },
+            { key: "languages", label: "Langues", icon: Languages, ok: !!detection && detection.langues.length > 0, value: detection?.langues.map((l) => l.name).join(", ") || "" },
+          ].map((c) => {
+            const Icon = c.icon;
+            return (
+              <Tooltip key={c.key}>
+                <TooltipTrigger asChild>
+                  <div
+                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                      c.ok
+                        ? "border-success/40 bg-success/10 text-success"
+                        : "border-card-foreground/15 bg-card-foreground/[0.03] text-card-foreground/40"
+                    }`}
+                  >
+                    {c.ok ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
+                    <Icon className="h-3.5 w-3.5" />
+                    {c.label}
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {c.ok && c.value ? c.value : "Pas encore détecté"}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </div>
+      </TooltipProvider>
+
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between sm:items-center">
         <Button
           variant="ghost"
