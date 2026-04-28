@@ -22,6 +22,7 @@ interface Props {
 export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props) => {
   const [mode, setMode] = useState<InterviewMode | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [onsiteAddress, setOnsiteAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const addSlot = () => {
@@ -33,15 +34,18 @@ export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props)
     setSlots((prev) => prev.map((s, idx) => idx === i ? { ...s, ...patch } : s));
 
   const validSlots = slots.filter((s) => s.date);
-  const canSubmit = mode !== null && validSlots.length >= 2;
+  const onsiteOk = mode !== "onsite" || onsiteAddress.trim().length > 3;
+  const requiredSlots = mode === "onsite" ? 3 : 2;
+  const canSubmit = mode !== null && validSlots.length >= requiredSlots && onsiteOk;
 
   const handleSubmit = async () => {
     if (!mode) return;
     setSubmitting(true);
     try {
-      await onSubmit(mode, validSlots);
+      await onSubmit(mode, validSlots, mode === "onsite" ? onsiteAddress.trim() : undefined);
       setMode(null);
       setSlots([]);
+      setOnsiteAddress("");
     } finally {
       setSubmitting(false);
     }
