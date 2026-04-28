@@ -88,7 +88,10 @@ export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props)
 
         {mode && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Créneaux proposés ({slots.length}/3)</p>
+            <p className="text-sm font-medium">
+              Créneaux proposés ({slots.length}/3)
+              {mode === "onsite" && <span className="text-muted-foreground font-normal"> — 3 créneaux requis</span>}
+            </p>
             {slots.map((s, i) => (
               <div key={i} className="flex items-center gap-2">
                 <Popover>
