@@ -309,7 +309,7 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
       {/* Planning & Pricing */}
       <Card>
         <CardContent className="p-6 space-y-4">
-          <h3 className="text-lg font-semibold text-card-foreground">Planning & Tarification</h3>
+          <h3 className="text-lg font-semibold text-card-foreground">Planning</h3>
           
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
