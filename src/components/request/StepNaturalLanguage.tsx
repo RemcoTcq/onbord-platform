@@ -99,17 +99,39 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
     onChange(update);
   };
 
+  const fillSteps = [
+    "Analyse de votre description…",
+    "Détection du profil et du domaine…",
+    "Extraction des compétences techniques…",
+    "Identification des soft skills et langues…",
+    "Pré-remplissage du formulaire…",
+  ];
+  const [fillStepIdx, setFillStepIdx] = useState(0);
+
   const handleContinue = async () => {
     setApplying(true);
+    setFillStepIdx(0);
     const q = data.naturalLanguageQuery.trim();
-    // If user typed something but no detection ran yet (or stale), force a sync run
-    if (q.length >= MIN_CHARS && (!detection || lastQueryRef.current !== q)) {
-      clearTimeout(debounceRef.current);
-      await runDetection(q);
+
+    // Animate the steps progressively
+    const stepTimer = setInterval(() => {
+      setFillStepIdx((i) => Math.min(i + 1, fillSteps.length - 1));
+    }, 600);
+
+    try {
+      if (q.length >= MIN_CHARS && (!detection || lastQueryRef.current !== q)) {
+        clearTimeout(debounceRef.current);
+        await runDetection(q);
+      }
+      if (detection) applyDetection(detection);
+      // Ensure all steps shown briefly
+      setFillStepIdx(fillSteps.length - 1);
+      await new Promise((r) => setTimeout(r, 500));
+    } finally {
+      clearInterval(stepTimer);
+      setApplying(false);
+      onNext();
     }
-    if (detection) applyDetection(detection);
-    setApplying(false);
-    onNext();
   };
 
   const checks = [
@@ -146,7 +168,49 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
+      {applying && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-card/95 backdrop-blur-sm -m-4 p-4">
+          <div className="w-full max-w-md space-y-6 text-center">
+            <div className="relative mx-auto h-16 w-16">
+              <div className="absolute inset-0 animate-ping rounded-full bg-primary/20" />
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <Sparkles className="h-7 w-7 text-primary animate-pulse" />
+              </div>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-card-foreground">L'IA remplit votre formulaire</h3>
+              <p className="text-sm text-card-foreground/60 mt-1">Quelques secondes seulement…</p>
+            </div>
+            <ul className="space-y-2 text-left">
+              {fillSteps.map((label, i) => {
+                const done = i < fillStepIdx;
+                const current = i === fillStepIdx;
+                return (
+                  <li
+                    key={i}
+                    className={`flex items-center gap-2 text-sm transition-opacity ${
+                      done || current ? "opacity-100" : "opacity-40"
+                    }`}
+                  >
+                    {done ? (
+                      <Check className="h-4 w-4 text-success shrink-0" />
+                    ) : current ? (
+                      <Loader2 className="h-4 w-4 text-primary animate-spin shrink-0" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-card-foreground/30 shrink-0" />
+                    )}
+                    <span className={done ? "text-card-foreground/70 line-through" : "text-card-foreground"}>
+                      {label}
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-xl font-semibold text-card-foreground">Décrivez votre besoin</h2>
         <p className="text-sm text-card-foreground/60">
