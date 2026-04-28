@@ -148,8 +148,39 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
     }
   };
 
+  const handleImportedOffer = async (extractedText: string) => {
+    setApplying(true);
+    setFillStepIdx(0);
 
-  return (
+    const STEP_DURATION = 700;
+    const startedAt = Date.now();
+    const stepTimer = setInterval(() => {
+      setFillStepIdx((i) => Math.min(i + 1, fillSteps.length - 1));
+    }, STEP_DURATION);
+
+    try {
+      clearTimeout(debounceRef.current);
+      // Force re-run even if same text was previously used
+      lastQueryRef.current = "";
+      const result = await runDetection(extractedText);
+      if (!result) {
+        toast.error("L'analyse de l'offre a échoué.");
+        return;
+      }
+      applyDetection(result);
+      const minTotal = STEP_DURATION * fillSteps.length + 300;
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < minTotal) {
+        await new Promise((r) => setTimeout(r, minTotal - elapsed));
+      }
+      setFillStepIdx(fillSteps.length - 1);
+      await new Promise((r) => setTimeout(r, 200));
+      onNext();
+    } finally {
+      clearInterval(stepTimer);
+      setApplying(false);
+    }
+  };
     <div className="space-y-6 relative">
       {applying && (
         <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-card/95 backdrop-blur-sm -m-4 p-4">
