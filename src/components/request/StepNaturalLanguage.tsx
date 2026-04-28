@@ -113,7 +113,7 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
     setFillStepIdx(0);
     const q = data.naturalLanguageQuery.trim();
 
-    const STEP_DURATION = 1400;
+    const STEP_DURATION = 700;
     const startedAt = Date.now();
 
     // Animate the steps progressively
@@ -127,14 +127,13 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
         await runDetection(q);
       }
       if (detection) applyDetection(detection);
-      // Wait for all steps to be visually displayed
-      const minTotal = STEP_DURATION * fillSteps.length + 600;
+      const minTotal = STEP_DURATION * fillSteps.length + 300;
       const elapsed = Date.now() - startedAt;
       if (elapsed < minTotal) {
         await new Promise((r) => setTimeout(r, minTotal - elapsed));
       }
       setFillStepIdx(fillSteps.length - 1);
-      await new Promise((r) => setTimeout(r, 400));
+      await new Promise((r) => setTimeout(r, 200));
     } finally {
       clearInterval(stepTimer);
       setApplying(false);
@@ -142,38 +141,6 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
     }
   };
 
-  const checks = [
-    {
-      key: "title",
-      label: "Titre du job",
-      icon: Briefcase,
-      ok: !!detection?.jobTitle,
-      value: detection?.jobTitle || "",
-    },
-    {
-      key: "skills",
-      label: "Skills",
-      icon: Wrench,
-      ok: !!detection && (detection.hardSkills.length + detection.customHardSkills.length) > 0,
-      value: detection
-        ? [...detection.hardSkills, ...detection.customHardSkills].slice(0, 4).join(", ")
-        : "",
-    },
-    {
-      key: "location",
-      label: "Localisation",
-      icon: MapPin,
-      ok: !!detection?.location,
-      value: detection?.location || "",
-    },
-    {
-      key: "languages",
-      label: "Langues",
-      icon: Languages,
-      ok: !!detection && detection.langues.length > 0,
-      value: detection?.langues.map((l) => l.name).join(", ") || "",
-    },
-  ];
 
   return (
     <div className="space-y-6 relative">
@@ -243,37 +210,9 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
         </div>
       </div>
 
-      {/* Checkmarks */}
-      <TooltipProvider delayDuration={150}>
-        <div className="flex flex-wrap items-center gap-2">
-          {checks.map((c) => {
-            const Icon = c.icon;
-            return (
-              <Tooltip key={c.key}>
-                <TooltipTrigger asChild>
-                  <div
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                      c.ok
-                        ? "border-success/40 bg-success/10 text-success"
-                        : "border-card-foreground/15 bg-card-foreground/[0.03] text-card-foreground/40"
-                    }`}
-                  >
-                    {c.ok ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
-                    <Icon className="h-3.5 w-3.5" />
-                    {c.label}
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {c.ok && c.value ? c.value : "Pas encore détecté"}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-          {analyzing && (
-            <span className="text-xs text-card-foreground/50 ml-1">Analyse…</span>
-          )}
-        </div>
-      </TooltipProvider>
+      {analyzing && (
+        <p className="text-xs text-card-foreground/50">Analyse…</p>
+      )}
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between sm:items-center">
         <Button
