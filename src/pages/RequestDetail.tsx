@@ -296,7 +296,6 @@ const RequestDetail = () => {
               </div>
             )}
           </CardContent>
-          </CardContent>
         </Card>
 
         {/* Proposed profiles (visible to owner + admin) */}
