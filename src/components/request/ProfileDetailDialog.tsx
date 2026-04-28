@@ -123,7 +123,7 @@ export const ProfileDetailDialog = ({
                     variant="outline"
                     className={
                       isMatch(s.name)
-                        ? "bg-success/15 text-success-foreground border-success"
+                        ? "bg-success/15 text-secondary-foreground border-success"
                         : ""
                     }
                   >
