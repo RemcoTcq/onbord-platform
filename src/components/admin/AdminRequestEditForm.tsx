@@ -409,26 +409,6 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
             />
           </div>
 
-          <Separator className="bg-card-foreground/10" />
-
-          {/* Pricing preview */}
-          <div className="rounded-xl bg-primary/5 p-4 space-y-2">
-            <h4 className="font-semibold text-card-foreground">Tarification calculée</h4>
-            <div className="grid gap-2 sm:grid-cols-3">
-              <div className="text-center">
-                <p className="text-xs text-card-foreground/60">Heures/semaine</p>
-                <p className="text-lg font-bold text-card-foreground">{pricing.weeklyHours}h</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-card-foreground/60">Prix/semaine</p>
-                <p className="text-lg font-bold text-card-foreground">{pricing.weeklyPrice.toLocaleString("fr-FR")}€</p>
-              </div>
-              <div className="text-center">
-                <p className="text-xs text-card-foreground/60">Prix/mois</p>
-                <p className="text-lg font-bold text-primary">{pricing.monthlyPrice.toLocaleString("fr-FR")}€</p>
-              </div>
-            </div>
-          </div>
         </CardContent>
       </Card>
 
