@@ -107,23 +107,23 @@ export const JobOfferImporter = ({ onImported, disabled }: Props) => {
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
           <FileText className="h-4 w-4" />
         </div>
-        <div className="flex-1 space-y-3">
+        <div className="flex-1 space-y-4">
           <div>
-            <h3 className="text-sm font-semibold text-card-foreground">
+            <h3 className="text-sm font-semibold text-card-foreground mb-2">
               Vous avez déjà une offre d'emploi&nbsp;?
             </h3>
-            <p className="text-xs text-card-foreground/60">
+            <p className="text-xs text-card-foreground/60 leading-relaxed mb-4">
               Importez-la pour pré-remplir automatiquement le formulaire (PDF, DOCX ou TXT, max 5 Mo).
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col items-start gap-2">
             <Button
               type="button"
               variant="outline"
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={busy}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto justify-start"
             >
               {extracting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -138,7 +138,7 @@ export const JobOfferImporter = ({ onImported, disabled }: Props) => {
               size="sm"
               onClick={() => setPasteOpen(true)}
               disabled={busy}
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto justify-start"
             >
               <ClipboardPaste className="h-4 w-4" />
               Coller le texte
