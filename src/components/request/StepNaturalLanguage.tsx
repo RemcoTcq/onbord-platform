@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sparkles, ArrowRight, Loader2, Check, Circle, MapPin, Briefcase, Wrench, Languages } from "lucide-react";
 import { toast } from "sonner";
+import { JobOfferImporter } from "./JobOfferImporter";
 
 interface Props {
   data: RequestFormData;
@@ -37,8 +38,8 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
   const lastQueryRef = useRef<string>("");
 
-  const runDetection = async (query: string) => {
-    if (query === lastQueryRef.current) return;
+  const runDetection = async (query: string): Promise<Detection | null> => {
+    if (query === lastQueryRef.current && detection) return detection;
     lastQueryRef.current = query;
     setAnalyzing(true);
     try {
@@ -49,11 +50,17 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
         const status = (error as any)?.context?.status;
         if (status === 429) toast.error("Trop de requêtes, réessayez dans un instant.");
         else if (status === 402) toast.error("Crédits IA épuisés.");
-        return;
+        else toast.error("Erreur lors de l'analyse.");
+        return null;
       }
-      if (result) setDetection(result as Detection);
+      if (result) {
+        setDetection(result as Detection);
+        return result as Detection;
+      }
+      return null;
     } catch (e) {
       console.error(e);
+      return null;
     } finally {
       setAnalyzing(false);
     }
@@ -141,9 +148,43 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
     }
   };
 
+  const handleImportedOffer = async (extractedText: string) => {
+    setApplying(true);
+    setFillStepIdx(0);
+
+    const STEP_DURATION = 700;
+    const startedAt = Date.now();
+    const stepTimer = setInterval(() => {
+      setFillStepIdx((i) => Math.min(i + 1, fillSteps.length - 1));
+    }, STEP_DURATION);
+
+    try {
+      clearTimeout(debounceRef.current);
+      // Force re-run even if same text was previously used
+      lastQueryRef.current = "";
+      const result = await runDetection(extractedText);
+      if (!result) {
+        toast.error("L'analyse de l'offre a échoué.");
+        return;
+      }
+      applyDetection(result);
+      const minTotal = STEP_DURATION * fillSteps.length + 300;
+      const elapsed = Date.now() - startedAt;
+      if (elapsed < minTotal) {
+        await new Promise((r) => setTimeout(r, minTotal - elapsed));
+      }
+      setFillStepIdx(fillSteps.length - 1);
+      await new Promise((r) => setTimeout(r, 200));
+      onNext();
+    } finally {
+      clearInterval(stepTimer);
+      setApplying(false);
+    }
+  };
 
   return (
     <div className="space-y-6 relative">
+      <JobOfferImporter onImported={handleImportedOffer} disabled={applying} />
       {applying && (
         <div className="absolute inset-0 z-50 flex items-center justify-center rounded-lg bg-card/95 backdrop-blur-sm -m-4 p-4">
           <div className="w-full max-w-md space-y-5 text-center">
