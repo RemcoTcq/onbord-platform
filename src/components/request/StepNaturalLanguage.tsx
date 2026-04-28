@@ -210,37 +210,9 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
         </div>
       </div>
 
-      {/* Checkmarks */}
-      <TooltipProvider delayDuration={150}>
-        <div className="flex flex-wrap items-center gap-2">
-          {checks.map((c) => {
-            const Icon = c.icon;
-            return (
-              <Tooltip key={c.key}>
-                <TooltipTrigger asChild>
-                  <div
-                    className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
-                      c.ok
-                        ? "border-success/40 bg-success/10 text-success"
-                        : "border-card-foreground/15 bg-card-foreground/[0.03] text-card-foreground/40"
-                    }`}
-                  >
-                    {c.ok ? <Check className="h-3.5 w-3.5" /> : <Circle className="h-3.5 w-3.5" />}
-                    <Icon className="h-3.5 w-3.5" />
-                    {c.label}
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {c.ok && c.value ? c.value : "Pas encore détecté"}
-                </TooltipContent>
-              </Tooltip>
-            );
-          })}
-          {analyzing && (
-            <span className="text-xs text-card-foreground/50 ml-1">Analyse…</span>
-          )}
-        </div>
-      </TooltipProvider>
+      {analyzing && (
+        <p className="text-xs text-card-foreground/50">Analyse…</p>
+      )}
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between sm:items-center">
         <Button
