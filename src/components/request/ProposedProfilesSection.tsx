@@ -141,13 +141,14 @@ export const ProposedProfilesSection = ({
     setRejectAllOpen(false);
   };
 
-  const submitInterview = async (mode: InterviewMode, slots: Slot[]) => {
+  const submitInterview = async (mode: InterviewMode, slots: Slot[], onsiteAddress?: string) => {
     if (!interviewProfileId) return;
     const { error } = await supabase.from("interview_requests").insert({
       proposed_profile_id: interviewProfileId,
       request_id: requestId,
       mode,
       proposed_slots: slots as any,
+      onsite_address: onsiteAddress ?? "",
     });
     if (error) {
       toast.error("Erreur lors de l'envoi");
@@ -160,7 +161,7 @@ export const ProposedProfilesSection = ({
     await supabase.from("admin_notifications").insert({
       type: "interview_slots_proposed",
       request_id: requestId,
-      payload: { profile_id: interviewProfileId, mode, slots },
+      payload: { profile_id: interviewProfileId, mode, slots, onsite_address: onsiteAddress ?? "" },
     });
     onStatusChange?.("Entretien en cours d'organisation");
     toast.success("Créneaux envoyés !");

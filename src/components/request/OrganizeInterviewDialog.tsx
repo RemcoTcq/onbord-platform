@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { CalendarIcon, Plus, Trash2, Video, Building2 } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, Video, Building2, MapPin } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -14,12 +16,13 @@ export type Slot = { date: string; period: "morning" | "afternoon" };
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  onSubmit: (mode: InterviewMode, slots: Slot[]) => Promise<void> | void;
+  onSubmit: (mode: InterviewMode, slots: Slot[], onsiteAddress?: string) => Promise<void> | void;
 }
 
 export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props) => {
   const [mode, setMode] = useState<InterviewMode | null>(null);
   const [slots, setSlots] = useState<Slot[]>([]);
+  const [onsiteAddress, setOnsiteAddress] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   const addSlot = () => {
@@ -31,15 +34,18 @@ export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props)
     setSlots((prev) => prev.map((s, idx) => idx === i ? { ...s, ...patch } : s));
 
   const validSlots = slots.filter((s) => s.date);
-  const canSubmit = mode !== null && validSlots.length >= 2;
+  const onsiteOk = mode !== "onsite" || onsiteAddress.trim().length > 3;
+  const requiredSlots = mode === "onsite" ? 3 : 2;
+  const canSubmit = mode !== null && validSlots.length >= requiredSlots && onsiteOk;
 
   const handleSubmit = async () => {
     if (!mode) return;
     setSubmitting(true);
     try {
-      await onSubmit(mode, validSlots);
+      await onSubmit(mode, validSlots, mode === "onsite" ? onsiteAddress.trim() : undefined);
       setMode(null);
       setSlots([]);
+      setOnsiteAddress("");
     } finally {
       setSubmitting(false);
     }
@@ -50,7 +56,7 @@ export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props)
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Super&nbsp;! Comment souhaitez-vous rencontrer ce talent&nbsp;?</DialogTitle>
-          <DialogDescription>Sélectionnez 2 à 3 créneaux. Onbord coordonne avec le talent.</DialogDescription>
+          <DialogDescription>Appel vidéo : 2 à 3 créneaux. Sur place : 3 créneaux et l'adresse de l'entretien.</DialogDescription>
         </DialogHeader>
 
         <div className="grid grid-cols-2 gap-3">
@@ -82,7 +88,10 @@ export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props)
 
         {mode && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">Créneaux proposés ({slots.length}/3)</p>
+            <p className="text-sm font-medium">
+              Créneaux proposés ({slots.length}/3)
+              {mode === "onsite" && <span className="text-muted-foreground font-normal"> — 3 créneaux requis</span>}
+            </p>
             {slots.map((s, i) => (
               <div key={i} className="flex items-center gap-2">
                 <Popover>
@@ -129,6 +138,21 @@ export const OrganizeInterviewDialog = ({ open, onOpenChange, onSubmit }: Props)
                 <Plus className="h-4 w-4" /> Ajouter un créneau
               </Button>
             )}
+          </div>
+        )}
+
+        {mode === "onsite" && (
+          <div className="space-y-2">
+            <Label htmlFor="onsite-address" className="text-sm font-medium flex items-center gap-1.5">
+              <MapPin className="h-4 w-4" /> Adresse de l'entretien
+            </Label>
+            <Input
+              id="onsite-address"
+              value={onsiteAddress}
+              onChange={(e) => setOnsiteAddress(e.target.value)}
+              placeholder="Rue, numéro, code postal, ville"
+            />
+            <p className="text-xs text-muted-foreground">Cette adresse sera communiquée au talent.</p>
           </div>
         )}
 

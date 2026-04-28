@@ -1,0 +1,1 @@
+ALTER TABLE public.interview_requests ADD COLUMN IF NOT EXISTS onsite_address text NOT NULL DEFAULT '';

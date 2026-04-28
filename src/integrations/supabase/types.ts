@@ -55,6 +55,7 @@ export type Database = {
           created_at: string
           id: string
           mode: string
+          onsite_address: string
           proposed_profile_id: string
           proposed_slots: Json
           request_id: string
@@ -66,6 +67,7 @@ export type Database = {
           created_at?: string
           id?: string
           mode: string
+          onsite_address?: string
           proposed_profile_id: string
           proposed_slots?: Json
           request_id: string
@@ -77,6 +79,7 @@ export type Database = {
           created_at?: string
           id?: string
           mode?: string
+          onsite_address?: string
           proposed_profile_id?: string
           proposed_slots?: Json
           request_id?: string
