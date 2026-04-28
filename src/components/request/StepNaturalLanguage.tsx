@@ -141,38 +141,6 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
     }
   };
 
-  const checks = [
-    {
-      key: "title",
-      label: "Titre du job",
-      icon: Briefcase,
-      ok: !!detection?.jobTitle,
-      value: detection?.jobTitle || "",
-    },
-    {
-      key: "skills",
-      label: "Skills",
-      icon: Wrench,
-      ok: !!detection && (detection.hardSkills.length + detection.customHardSkills.length) > 0,
-      value: detection
-        ? [...detection.hardSkills, ...detection.customHardSkills].slice(0, 4).join(", ")
-        : "",
-    },
-    {
-      key: "location",
-      label: "Localisation",
-      icon: MapPin,
-      ok: !!detection?.location,
-      value: detection?.location || "",
-    },
-    {
-      key: "languages",
-      label: "Langues",
-      icon: Languages,
-      ok: !!detection && detection.langues.length > 0,
-      value: detection?.langues.map((l) => l.name).join(", ") || "",
-    },
-  ];
 
   return (
     <div className="space-y-6 relative">
