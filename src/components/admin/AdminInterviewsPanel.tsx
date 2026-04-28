@@ -16,6 +16,7 @@ interface IR {
   confirmed_slot: { date: string; period: string } | null;
   status: string;
   created_at: string;
+  onsite_address?: string;
 }
 
 export const AdminInterviewsPanel = ({ requestId, onConfirmed }: { requestId: string; onConfirmed?: () => void }) => {
