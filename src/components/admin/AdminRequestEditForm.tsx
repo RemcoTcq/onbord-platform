@@ -44,12 +44,6 @@ export const AdminRequestEditForm = ({ request, onSave, onCancel }: Props) => {
   const [customLangInput, setCustomLangInput] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const pricing = useMemo(() => calculatePricing({
-    scheduleType: form.schedule_type,
-    scheduleDetails: form.schedule_details,
-    daysPerWeek: form.days_per_week,
-    talentsNumber: form.talents_number,
-  }), [form.schedule_type, form.schedule_details, form.days_per_week, form.talents_number]);
 
   const hardSkills = form.domain ? HARD_SKILLS_MAP[form.domain] || [] : [];
 
