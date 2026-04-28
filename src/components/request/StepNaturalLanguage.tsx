@@ -99,17 +99,39 @@ export const StepNaturalLanguage = ({ data, onChange, onNext }: Props) => {
     onChange(update);
   };
 
+  const fillSteps = [
+    "Analyse de votre description…",
+    "Détection du profil et du domaine…",
+    "Extraction des compétences techniques…",
+    "Identification des soft skills et langues…",
+    "Pré-remplissage du formulaire…",
+  ];
+  const [fillStepIdx, setFillStepIdx] = useState(0);
+
   const handleContinue = async () => {
     setApplying(true);
+    setFillStepIdx(0);
     const q = data.naturalLanguageQuery.trim();
-    // If user typed something but no detection ran yet (or stale), force a sync run
-    if (q.length >= MIN_CHARS && (!detection || lastQueryRef.current !== q)) {
-      clearTimeout(debounceRef.current);
-      await runDetection(q);
+
+    // Animate the steps progressively
+    const stepTimer = setInterval(() => {
+      setFillStepIdx((i) => Math.min(i + 1, fillSteps.length - 1));
+    }, 600);
+
+    try {
+      if (q.length >= MIN_CHARS && (!detection || lastQueryRef.current !== q)) {
+        clearTimeout(debounceRef.current);
+        await runDetection(q);
+      }
+      if (detection) applyDetection(detection);
+      // Ensure all steps shown briefly
+      setFillStepIdx(fillSteps.length - 1);
+      await new Promise((r) => setTimeout(r, 500));
+    } finally {
+      clearInterval(stepTimer);
+      setApplying(false);
+      onNext();
     }
-    if (detection) applyDetection(detection);
-    setApplying(false);
-    onNext();
   };
 
   const checks = [
