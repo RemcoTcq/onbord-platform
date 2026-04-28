@@ -52,6 +52,9 @@ export const AdminInterviewsPanel = ({ requestId, onConfirmed }: { requestId: st
               </div>
               <span className="text-xs text-muted-foreground">{format(new Date(ir.created_at), "PPp", { locale: fr })}</span>
             </div>
+            {ir.mode === "onsite" && ir.onsite_address && (
+              <p className="text-xs text-muted-foreground">📍 {ir.onsite_address}</p>
+            )}
             {ir.confirmed_slot ? (
               <p className="text-sm">
                 Confirmé : {format(new Date(ir.confirmed_slot.date), "PPP", { locale: fr })} ({ir.confirmed_slot.period === "morning" ? "matin" : "après-midi"})
