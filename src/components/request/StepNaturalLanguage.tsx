@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sparkles, ArrowRight, Loader2, Check, Circle, MapPin, Briefcase, Wrench, Languages } from "lucide-react";
 import { toast } from "sonner";
+import { JobOfferImporter } from "./JobOfferImporter";
 
 interface Props {
   data: RequestFormData;
