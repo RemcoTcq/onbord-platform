@@ -10,7 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, ClipboardPaste, FileText, Loader2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Paperclip, Upload, ClipboardPaste, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -102,57 +109,51 @@ export const JobOfferImporter = ({ onImported, disabled }: Props) => {
   const busy = disabled || extracting;
 
   return (
-    <div className="rounded-lg border border-card-foreground/15 bg-card-foreground/[0.03] p-4">
-      <div className="flex items-start gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
-          <FileText className="h-4 w-4" />
-        </div>
-        <div className="flex-1 space-y-4">
-          <div>
-            <h3 className="text-sm font-semibold text-card-foreground mb-2">
-              Vous avez déjà une offre d'emploi&nbsp;?
-            </h3>
-            <p className="text-xs text-card-foreground/60 leading-relaxed mb-4">
-              Importez-la pour pré-remplir automatiquement le formulaire (PDF, DOCX ou TXT, max 5 Mo).
-            </p>
-          </div>
-          <div className="flex flex-col items-start gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={busy}
-              className="gap-2 w-full sm:w-auto justify-start"
-            >
-              {extracting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4" />
-              )}
+    <>
+      <TooltipProvider delayDuration={200}>
+        <DropdownMenu>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  disabled={busy}
+                  className="h-8 w-8 text-card-foreground/50 hover:text-card-foreground hover:bg-card-foreground/5"
+                >
+                  {extracting ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Paperclip className="h-4 w-4" />
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent side="top">
+              Importer une offre d'emploi
+            </TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuItem onClick={() => fileInputRef.current?.click()}>
+              <Upload className="mr-2 h-4 w-4" />
               Importer un fichier
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setPasteOpen(true)}
-              disabled={busy}
-              className="gap-2 w-full sm:w-auto justify-start"
-            >
-              <ClipboardPaste className="h-4 w-4" />
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setPasteOpen(true)}>
+              <ClipboardPaste className="mr-2 h-4 w-4" />
               Coller le texte
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
-              className="hidden"
-              onChange={handleFileChange}
-            />
-          </div>
-        </div>
-      </div>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TooltipProvider>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+        className="hidden"
+        onChange={handleFileChange}
+      />
 
       <Dialog open={pasteOpen} onOpenChange={setPasteOpen}>
         <DialogContent className="max-w-2xl">
@@ -179,6 +180,6 @@ export const JobOfferImporter = ({ onImported, disabled }: Props) => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 };
