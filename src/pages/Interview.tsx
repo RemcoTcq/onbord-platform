@@ -180,6 +180,10 @@ const Interview = () => {
                 <p className="text-sm text-muted-foreground">
                   Merci d'avoir pris le temps. L'équipe va revenir vers toi rapidement.
                 </p>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Cette page se ferme dans {Math.max(0, countdown)} seconde
+                  {countdown > 1 ? "s" : ""}…
+                </p>
               </CardContent>
             </Card>
           )}
