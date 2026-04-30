@@ -29,7 +29,9 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [uploadingCv, setUploadingCv] = useState<string | null>(null);
+  const [invitingId, setInvitingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "green" | "yellow" | "red">("all");
+  const [requestTitle, setRequestTitle] = useState<string>("");
   const csvInputRef = useRef<HTMLInputElement>(null);
   const cvInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
