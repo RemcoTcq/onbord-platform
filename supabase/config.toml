@@ -1,1 +1,10 @@
 project_id = "ataqwmyrqppdjujgovok"
+
+[functions.get-interview-session]
+verify_jwt = false
+
+[functions.interview-chat]
+verify_jwt = false
+
+[functions.score-interview]
+verify_jwt = false
