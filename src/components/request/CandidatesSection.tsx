@@ -4,8 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Upload, FileText, Loader2, Users, RefreshCw, Mail } from "lucide-react";
+import { Upload, FileText, Loader2, Users, RefreshCw, Mail, Info, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+type ScoreRow = {
+  cv_score: number | null;
+  global_score: number | null;
+  interview_score: number | null;
+  flag: string | null;
+  ai_summary: string;
+  ai_strengths: string[];
+  ai_concerns: string[];
+  cv_breakdown: Record<string, any>;
+  interview_breakdown: Record<string, any>;
+};
 
 type Candidate = {
   id: string;
@@ -15,7 +34,16 @@ type Candidate = {
   phone: string;
   status: string;
   cv_storage_path: string;
-  candidate_scores?: { cv_score: number | null; global_score: number | null; flag: string | null; ai_summary: string }[];
+  candidate_scores?: ScoreRow[];
+};
+
+const CRITERIA_LABELS: Record<string, string> = {
+  must_have_skills: "Compétences requises",
+  nice_to_have_skills: "Compétences bonus",
+  experience_years: "Années d'expérience",
+  diploma: "Diplôme",
+  languages: "Langues",
+  soft_skills: "Soft skills",
 };
 
 const FLAG_STYLES: Record<string, string> = {
@@ -32,6 +60,7 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
   const [invitingId, setInvitingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "green" | "yellow" | "red">("all");
   const [requestTitle, setRequestTitle] = useState<string>("");
+  const [detailsCandidate, setDetailsCandidate] = useState<Candidate | null>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const cvInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
@@ -47,7 +76,7 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
       const ids = list.map((c) => c.id);
       const { data: scoresData } = await supabase
         .from("candidate_scores")
-        .select("candidate_id, cv_score, global_score, flag, ai_summary")
+        .select("candidate_id, cv_score, global_score, interview_score, flag, ai_summary, ai_strengths, ai_concerns, cv_breakdown, interview_breakdown")
         .in("candidate_id", ids);
       const byId = new Map<string, any>();
       (scoresData || []).forEach((s: any) => byId.set(s.candidate_id, s));
@@ -351,9 +380,16 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
                         {c.first_name} {c.last_name}
                       </span>
                       {score?.flag && (
-                        <Badge className={FLAG_STYLES[score.flag]}>
-                          {score.global_score ?? score.cv_score}/100
-                        </Badge>
+                        <button
+                          type="button"
+                          onClick={() => setDetailsCandidate(c)}
+                          className="focus:outline-none"
+                          title="Voir le détail du scoring"
+                        >
+                          <Badge className={`${FLAG_STYLES[score.flag]} cursor-pointer hover:opacity-90`}>
+                            {score.global_score ?? score.cv_score}/100
+                          </Badge>
+                        </button>
                       )}
                       <Badge variant="outline" className="text-xs">
                         {c.status}
@@ -394,6 +430,16 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
                       <span className="ml-1 text-xs">{c.cv_storage_path ? "CV" : "Upload CV"}</span>
                     </Button>
                     <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setDetailsCandidate(c)}
+                      disabled={!score}
+                      title={score ? "Voir le détail du scoring" : "Score non disponible"}
+                    >
+                      <Info className="h-4 w-4" />
+                      <span className="ml-1 text-xs">Détails</span>
+                    </Button>
+                    <Button
                       variant="outline"
                       size="sm"
                       onClick={() => inviteToInterview(c)}
@@ -413,7 +459,198 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
             })}
           </div>
         )}
+
+        <CandidateDetailsDialog
+          candidate={detailsCandidate}
+          onClose={() => setDetailsCandidate(null)}
+        />
       </CardContent>
     </Card>
+  );
+};
+
+const CandidateDetailsDialog = ({
+  candidate,
+  onClose,
+}: {
+  candidate: Candidate | null;
+  onClose: () => void;
+}) => {
+  const score = candidate?.candidate_scores?.[0];
+  const cvBreakdown = (score?.cv_breakdown || {}) as Record<string, any>;
+  const interviewBreakdown = (score?.interview_breakdown || {}) as Record<string, any>;
+
+  return (
+    <Dialog open={!!candidate} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>
+            {candidate?.first_name} {candidate?.last_name}
+          </DialogTitle>
+          <DialogDescription>
+            Détail du scoring et analyse IA
+          </DialogDescription>
+        </DialogHeader>
+
+        {!score ? (
+          <p className="text-sm text-muted-foreground">
+            Aucun score disponible. Upload un CV pour lancer l'analyse.
+          </p>
+        ) : (
+          <div className="space-y-5">
+            {/* Scores summary */}
+            <div className="grid grid-cols-3 gap-3">
+              <ScoreTile label="Score global" value={score.global_score} flag={score.flag} />
+              <ScoreTile label="Score CV" value={score.cv_score} />
+              <ScoreTile label="Score entretien" value={score.interview_score} />
+            </div>
+
+            {/* AI summary */}
+            {score.ai_summary && (
+              <section>
+                <h4 className="text-sm font-semibold mb-2 text-card-foreground">
+                  Résumé de l'IA
+                </h4>
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                  {score.ai_summary}
+                </p>
+              </section>
+            )}
+
+            {/* Concerns first — that's what user asked */}
+            {score.ai_concerns?.length > 0 && (
+              <section>
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2 text-destructive">
+                  <XCircle className="h-4 w-4" />
+                  Pourquoi ce candidat n'est pas idéal
+                </h4>
+                <ul className="space-y-1.5">
+                  {score.ai_concerns.map((c, i) => (
+                    <li key={i} className="text-sm text-card-foreground flex gap-2">
+                      <AlertTriangle className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
+                      <span>{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {/* Strengths */}
+            {score.ai_strengths?.length > 0 && (
+              <section>
+                <h4 className="text-sm font-semibold mb-2 flex items-center gap-2 text-success">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Points forts
+                </h4>
+                <ul className="space-y-1.5">
+                  {score.ai_strengths.map((s, i) => (
+                    <li key={i} className="text-sm text-card-foreground flex gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-success shrink-0 mt-0.5" />
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+
+            {/* CV breakdown */}
+            {Object.keys(cvBreakdown).length > 0 && (
+              <section>
+                <h4 className="text-sm font-semibold mb-2 text-card-foreground">
+                  Détail du score CV
+                </h4>
+                <div className="space-y-2">
+                  {Object.entries(cvBreakdown).map(([key, val]) => (
+                    <BreakdownRow key={key} criterion={key} value={val} />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Interview breakdown */}
+            {Object.keys(interviewBreakdown).length > 0 && (
+              <section>
+                <h4 className="text-sm font-semibold mb-2 text-card-foreground">
+                  Détail du score entretien
+                </h4>
+                <div className="space-y-2">
+                  {Object.entries(interviewBreakdown).map(([key, val]) => (
+                    <BreakdownRow key={key} criterion={key} value={val} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const ScoreTile = ({
+  label,
+  value,
+  flag,
+}: {
+  label: string;
+  value: number | null | undefined;
+  flag?: string | null;
+}) => (
+  <div className="rounded-lg border bg-muted/30 p-3 text-center">
+    <p className="text-xs text-muted-foreground">{label}</p>
+    <p
+      className={`text-2xl font-semibold mt-1 ${
+        flag === "green"
+          ? "text-success"
+          : flag === "yellow"
+          ? "text-warning"
+          : flag === "red"
+          ? "text-destructive"
+          : "text-card-foreground"
+      }`}
+    >
+      {value ?? "—"}
+      {value != null && <span className="text-sm text-muted-foreground">/100</span>}
+    </p>
+  </div>
+);
+
+const BreakdownRow = ({ criterion, value }: { criterion: string; value: any }) => {
+  const label = CRITERIA_LABELS[criterion] || criterion.replace(/_/g, " ");
+  // value can be a number or { score, max, comment }
+  const score = typeof value === "object" && value !== null ? value.score : value;
+  const max = typeof value === "object" && value !== null ? value.max : null;
+  const comment = typeof value === "object" && value !== null ? value.comment : null;
+  const ratio = typeof score === "number" && typeof max === "number" && max > 0
+    ? score / max
+    : null;
+  const barColor = ratio == null
+    ? "bg-muted"
+    : ratio >= 0.8
+    ? "bg-success"
+    : ratio >= 0.5
+    ? "bg-warning"
+    : "bg-destructive";
+  return (
+    <div className="space-y-1">
+      <div className="flex justify-between items-center text-sm">
+        <span className="capitalize text-card-foreground">{label}</span>
+        <span className="text-muted-foreground tabular-nums">
+          {typeof score === "number" ? score : "—"}
+          {max ? `/${max}` : ""}
+        </span>
+      </div>
+      {ratio != null && (
+        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+          <div
+            className={`h-full ${barColor} transition-all`}
+            style={{ width: `${Math.min(100, Math.max(0, ratio * 100))}%` }}
+          />
+        </div>
+      )}
+      {comment && (
+        <p className="text-xs text-muted-foreground italic">{comment}</p>
+      )}
+    </div>
   );
 };
