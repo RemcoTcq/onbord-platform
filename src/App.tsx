@@ -17,6 +17,7 @@ import Drafts from "./pages/Drafts";
 import Admin from "./pages/Admin";
 import Account from "./pages/Account";
 import Interview from "./pages/Interview";
+import Unsubscribe from "./pages/Unsubscribe";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
