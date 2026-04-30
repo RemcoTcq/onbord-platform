@@ -46,6 +46,15 @@ const CRITERIA_LABELS: Record<string, string> = {
   soft_skills: "Soft skills",
 };
 
+const STATUS_LABELS: Record<string, string> = {
+  imported: "Importé",
+  cv_uploaded: "CV reçu",
+  scored: "Scoré",
+  interview_invited: "Invité à l'entretien",
+  interview_in_progress: "Entretien en cours",
+  interview_done: "Entretien terminé",
+};
+
 const FLAG_STYLES: Record<string, string> = {
   green: "bg-success text-success-foreground",
   yellow: "bg-warning text-warning-foreground",
