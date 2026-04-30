@@ -669,19 +669,43 @@ const CandidateDetailsDialog = ({
               </section>
             )}
 
-            {/* Interview breakdown */}
-            {Object.keys(interviewBreakdown).length > 0 && (
-              <section>
-                <h4 className="text-sm font-semibold mb-2 text-card-foreground">
-                  Détail du score entretien
-                </h4>
-                <div className="space-y-2">
-                  {Object.entries(interviewBreakdown).map(([key, val]) => (
-                    <BreakdownRow key={key} criterion={key} value={val} />
-                  ))}
+            {/* Interview section */}
+            <section>
+              <h4 className="text-sm font-semibold mb-2 text-card-foreground">
+                Analyse de l'entretien IA
+              </h4>
+              {score.interview_score == null ? (
+                <p className="text-sm text-muted-foreground italic">
+                  Entretien pas encore réalisé. Génère un lien d'entretien depuis la
+                  ligne du candidat pour démarrer.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {/* Extract "Entretien:" part of summary if present */}
+                  {(() => {
+                    const m = score.ai_summary?.match(/Entretien:\s*([\s\S]*)$/);
+                    const interviewSummary = m ? m[1].trim() : null;
+                    return interviewSummary ? (
+                      <div className="rounded-md border bg-muted/20 p-3">
+                        <p className="text-xs font-semibold mb-1 text-card-foreground">
+                          Pourquoi ce score
+                        </p>
+                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                          {interviewSummary}
+                        </p>
+                      </div>
+                    ) : null;
+                  })()}
+                  {Object.keys(interviewBreakdown).length > 0 && (
+                    <div className="space-y-2">
+                      {Object.entries(interviewBreakdown).map(([key, val]) => (
+                        <BreakdownRow key={key} criterion={key} value={val} />
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </section>
-            )}
+              )}
+            </section>
           </div>
         )}
       </DialogContent>
