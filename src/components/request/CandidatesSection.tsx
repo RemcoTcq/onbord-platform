@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Upload, FileText, Loader2, Users, RefreshCw } from "lucide-react";
+import { Upload, FileText, Loader2, Users, RefreshCw, Mail } from "lucide-react";
 import { toast } from "sonner";
 
 type Candidate = {
