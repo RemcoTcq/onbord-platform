@@ -380,9 +380,16 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
                         {c.first_name} {c.last_name}
                       </span>
                       {score?.flag && (
-                        <Badge className={FLAG_STYLES[score.flag]}>
-                          {score.global_score ?? score.cv_score}/100
-                        </Badge>
+                        <button
+                          type="button"
+                          onClick={() => setDetailsCandidate(c)}
+                          className="focus:outline-none"
+                          title="Voir le détail du scoring"
+                        >
+                          <Badge className={`${FLAG_STYLES[score.flag]} cursor-pointer hover:opacity-90`}>
+                            {score.global_score ?? score.cv_score}/100
+                          </Badge>
+                        </button>
                       )}
                       <Badge variant="outline" className="text-xs">
                         {c.status}
