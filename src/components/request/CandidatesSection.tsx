@@ -107,6 +107,24 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
       .eq("id", requestId)
       .maybeSingle()
       .then(({ data }) => setRequestTitle((data as any)?.title || ""));
+
+    // Realtime: refresh when scores change (e.g. interview just finished)
+    const channel = supabase
+      .channel(`scores-${requestId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "candidate_scores" },
+        () => load()
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "candidates", filter: `request_id=eq.${requestId}` },
+        () => load()
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [requestId]);
 
   const generateInterviewLink = async (candidate: Candidate) => {
