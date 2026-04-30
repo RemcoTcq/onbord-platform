@@ -4,8 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Upload, FileText, Loader2, Users, RefreshCw, Mail } from "lucide-react";
+import { Upload, FileText, Loader2, Users, RefreshCw, Mail, Info, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
+type ScoreRow = {
+  cv_score: number | null;
+  global_score: number | null;
+  interview_score: number | null;
+  flag: string | null;
+  ai_summary: string;
+  ai_strengths: string[];
+  ai_concerns: string[];
+  cv_breakdown: Record<string, any>;
+  interview_breakdown: Record<string, any>;
+};
 
 type Candidate = {
   id: string;
@@ -15,7 +34,16 @@ type Candidate = {
   phone: string;
   status: string;
   cv_storage_path: string;
-  candidate_scores?: { cv_score: number | null; global_score: number | null; flag: string | null; ai_summary: string }[];
+  candidate_scores?: ScoreRow[];
+};
+
+const CRITERIA_LABELS: Record<string, string> = {
+  must_have_skills: "Compétences requises",
+  nice_to_have_skills: "Compétences bonus",
+  experience_years: "Années d'expérience",
+  diploma: "Diplôme",
+  languages: "Langues",
+  soft_skills: "Soft skills",
 };
 
 const FLAG_STYLES: Record<string, string> = {
