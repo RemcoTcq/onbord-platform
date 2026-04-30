@@ -521,16 +521,16 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => inviteToInterview(c)}
-                      disabled={invitingId === c.id || !c.email}
-                      title={!c.email ? "Email manquant" : "Inviter à l'entretien IA"}
+                      onClick={() => generateInterviewLink(c)}
+                      disabled={generatingLinkId === c.id}
+                      title="Générer le lien d'entretien IA"
                     >
-                      {invitingId === c.id ? (
+                      {generatingLinkId === c.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Mail className="h-4 w-4" />
+                        <LinkIcon className="h-4 w-4" />
                       )}
-                      <span className="ml-1 text-xs">Inviter</span>
+                      <span className="ml-1 text-xs">Lien entretien</span>
                     </Button>
                   </div>
                 </div>
@@ -542,6 +542,11 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
         <CandidateDetailsDialog
           candidate={detailsCandidate}
           onClose={() => setDetailsCandidate(null)}
+        />
+
+        <InterviewLinkDialog
+          data={interviewLink}
+          onClose={() => setInterviewLink(null)}
         />
       </CardContent>
     </Card>
