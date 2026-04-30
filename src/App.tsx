@@ -17,6 +17,7 @@ import Drafts from "./pages/Drafts";
 import Admin from "./pages/Admin";
 import Account from "./pages/Account";
 import Interview from "./pages/Interview";
+import Unsubscribe from "./pages/Unsubscribe";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -41,6 +42,7 @@ const App = () => (
             <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="/interview/:token" element={<Interview />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </ProfileProvider>
