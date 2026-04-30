@@ -40,6 +40,7 @@ const App = () => (
             <Route path="/drafts" element={<ProtectedRoute><Drafts /></ProtectedRoute>} />
             <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+            <Route path="/interview/:token" element={<Interview />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </ProfileProvider>
