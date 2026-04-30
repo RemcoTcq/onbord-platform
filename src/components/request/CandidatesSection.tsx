@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Upload, FileText, Loader2, Users, RefreshCw, Mail, Info, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+import { Upload, FileText, Loader2, Users, RefreshCw, Link as LinkIcon, Info, CheckCircle2, AlertTriangle, XCircle, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -66,7 +66,8 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [uploadingCv, setUploadingCv] = useState<string | null>(null);
-  const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [generatingLinkId, setGeneratingLinkId] = useState<string | null>(null);
+  const [interviewLink, setInterviewLink] = useState<{ url: string; candidate: Candidate } | null>(null);
   const [filter, setFilter] = useState<"all" | "green" | "yellow" | "red">("all");
   const [requestTitle, setRequestTitle] = useState<string>("");
   const [detailsCandidate, setDetailsCandidate] = useState<Candidate | null>(null);
@@ -108,14 +109,9 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
       .then(({ data }) => setRequestTitle((data as any)?.title || ""));
   }, [requestId]);
 
-  const inviteToInterview = async (candidate: Candidate) => {
-    if (!candidate.email) {
-      toast.error("Email manquant pour ce candidat");
-      return;
-    }
-    setInvitingId(candidate.id);
+  const generateInterviewLink = async (candidate: Candidate) => {
+    setGeneratingLinkId(candidate.id);
     try {
-      // Reuse existing pending session or create a new one
       const { data: existing } = await supabase
         .from("interview_sessions")
         .select("id, token, status")
@@ -134,47 +130,93 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
         token = (created as any).token;
       }
 
-      const interviewUrl = `${window.location.origin}/interview/${token}`;
+      const url = `${window.location.origin}/interview/${token}`;
 
-      const { error: emailErr } = await supabase.functions.invoke("send-transactional-email", {
-        body: {
-          templateName: "interview-invitation",
-          recipientEmail: candidate.email,
-          idempotencyKey: `interview-invite-${candidate.id}-${token}`,
-          templateData: {
-            candidateFirstName: candidate.first_name,
-            jobTitle: requestTitle,
-            interviewUrl,
-            estimatedMinutes: 10,
-          },
-        },
-      });
-      if (emailErr) throw emailErr;
+      if (candidate.status !== "interview_invited") {
+        await supabase
+          .from("candidates")
+          .update({ status: "interview_invited" })
+          .eq("id", candidate.id);
+      }
 
-      await supabase
-        .from("candidates")
-        .update({ status: "interview_invited" })
-        .eq("id", candidate.id);
-
-      toast.success(`Invitation envoyée à ${candidate.email}`);
+      setInterviewLink({ url, candidate });
       load();
     } catch (err: any) {
-      toast.error(err?.message || "Envoi de l'invitation échoué");
+      toast.error(err?.message || "Génération du lien échouée");
     } finally {
-      setInvitingId(null);
+      setGeneratingLinkId(null);
     }
   };
 
-  const parseCsv = (text: string): Record<string, string>[] => {
-    const lines = text.split(/\r?\n/).filter((l) => l.trim());
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(/[,;]/).map((h) => h.trim().toLowerCase());
-    return lines.slice(1).map((line) => {
-      const values = line.split(/[,;]/).map((v) => v.trim());
+  // CSV parsing — RFC-ish, handles quoted fields, BOM, auto separator, accented headers
+  const stripAccents = (s: string) =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  const detectSeparator = (headerLine: string): string => {
+    const candidates = [",", ";", "\t"];
+    let best = ",";
+    let bestCount = -1;
+    for (const sep of candidates) {
+      // Count separators outside quotes
+      let inQuotes = false;
+      let count = 0;
+      for (let i = 0; i < headerLine.length; i++) {
+        const ch = headerLine[i];
+        if (ch === '"') inQuotes = !inQuotes;
+        else if (!inQuotes && ch === sep) count++;
+      }
+      if (count > bestCount) {
+        best = sep;
+        bestCount = count;
+      }
+    }
+    return best;
+  };
+
+  const parseCsvLine = (line: string, sep: string): string[] => {
+    const out: string[] = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (line[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          cur += ch;
+        }
+      } else {
+        if (ch === '"') inQuotes = true;
+        else if (ch === sep) {
+          out.push(cur);
+          cur = "";
+        } else cur += ch;
+      }
+    }
+    out.push(cur);
+    return out.map((v) => v.trim());
+  };
+
+  const parseCsv = (text: string): { rows: Record<string, string>[]; total: number } => {
+    // Strip BOM
+    const cleaned = text.replace(/^\uFEFF/, "");
+    const lines = cleaned.split(/\r?\n/).filter((l) => l.trim().length > 0);
+    if (lines.length < 2) return { rows: [], total: 0 };
+    const sep = detectSeparator(lines[0]);
+    const rawHeaders = parseCsvLine(lines[0], sep);
+    const headers = rawHeaders.map((h) => stripAccents(h.toLowerCase().trim()));
+    const rows = lines.slice(1).map((line) => {
+      const values = parseCsvLine(line, sep);
       const row: Record<string, string> = {};
-      headers.forEach((h, i) => (row[h] = values[i] || ""));
+      headers.forEach((h, i) => (row[h] = (values[i] || "").trim()));
       return row;
     });
+    return { rows, total: lines.length - 1 };
   };
 
   const matchField = (row: Record<string, string>, keys: string[]) => {
@@ -195,27 +237,38 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
     setImporting(true);
     try {
       const text = await file.text();
-      const rows = parseCsv(text);
+      const { rows, total } = parseCsv(text);
       if (rows.length === 0) {
-        toast.error("CSV vide ou invalide");
+        toast.error("CSV vide ou invalide. Vérifiez l'en-tête (prenom, nom, email…).");
         return;
       }
       if (rows.length > 200) {
         toast.error("Maximum 200 candidats par import");
         return;
       }
-      const toInsert = rows.map((r) => ({
-        request_id: requestId,
-        first_name: matchField(r, ["prenom", "first", "firstname"]).slice(0, 100),
-        last_name: matchField(r, ["nom", "last", "lastname"]).slice(0, 100),
-        email: matchField(r, ["email", "mail"]).slice(0, 255),
-        phone: matchField(r, ["phone", "tel", "telephone"]).slice(0, 50),
-        linkedin_url: matchField(r, ["linkedin", "url"]).slice(0, 500),
-        source: "csv_import",
-      }));
+      const toInsert = rows
+        .map((r) => ({
+          request_id: requestId,
+          first_name: matchField(r, ["prenom", "first", "firstname"]).slice(0, 100),
+          last_name: matchField(r, ["nom", "last", "lastname"]).slice(0, 100),
+          email: matchField(r, ["email", "mail", "courriel"]).slice(0, 255),
+          phone: matchField(r, ["phone", "tel", "telephone", "mobile", "gsm"]).slice(0, 50),
+          linkedin_url: matchField(r, ["linkedin", "url"]).slice(0, 500),
+          source: "csv_import",
+        }))
+        .filter((c) => c.first_name || c.last_name || c.email);
+      if (toInsert.length === 0) {
+        toast.error("Aucune ligne exploitable. Vérifiez les noms de colonnes.");
+        return;
+      }
       const { error } = await supabase.from("candidates").insert(toInsert);
       if (error) throw error;
-      toast.success(`${toInsert.length} candidat(s) importé(s)`);
+      const skipped = total - toInsert.length;
+      toast.success(
+        skipped > 0
+          ? `${toInsert.length} candidat(s) importé(s) (${skipped} ligne(s) ignorée(s))`
+          : `${toInsert.length} candidat(s) importé(s)`
+      );
       load();
     } catch (err: any) {
       toast.error(err?.message || "Import échoué");
@@ -468,16 +521,16 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => inviteToInterview(c)}
-                      disabled={invitingId === c.id || !c.email}
-                      title={!c.email ? "Email manquant" : "Inviter à l'entretien IA"}
+                      onClick={() => generateInterviewLink(c)}
+                      disabled={generatingLinkId === c.id}
+                      title="Générer le lien d'entretien IA"
                     >
-                      {invitingId === c.id ? (
+                      {generatingLinkId === c.id ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <Mail className="h-4 w-4" />
+                        <LinkIcon className="h-4 w-4" />
                       )}
-                      <span className="ml-1 text-xs">Inviter</span>
+                      <span className="ml-1 text-xs">Lien entretien</span>
                     </Button>
                   </div>
                 </div>
@@ -489,6 +542,11 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
         <CandidateDetailsDialog
           candidate={detailsCandidate}
           onClose={() => setDetailsCandidate(null)}
+        />
+
+        <InterviewLinkDialog
+          data={interviewLink}
+          onClose={() => setInterviewLink(null)}
         />
       </CardContent>
     </Card>
@@ -643,10 +701,12 @@ const ScoreTile = ({
 
 const BreakdownRow = ({ criterion, value }: { criterion: string; value: any }) => {
   const label = CRITERIA_LABELS[criterion] || criterion.replace(/_/g, " ");
-  // value can be a number or { score, max, comment }
-  const score = typeof value === "object" && value !== null ? value.score : value;
-  const max = typeof value === "object" && value !== null ? value.max : null;
-  const comment = typeof value === "object" && value !== null ? value.comment : null;
+  const isObj = typeof value === "object" && value !== null;
+  const score = isObj ? value.score : value;
+  const max = isObj ? value.max : null;
+  const comment = isObj ? value.comment : null;
+  const requirement = isObj ? value.requirement : null;
+  const evidenceCv = isObj ? value.evidence_cv : null;
   const ratio = typeof score === "number" && typeof max === "number" && max > 0
     ? score / max
     : null;
@@ -658,9 +718,9 @@ const BreakdownRow = ({ criterion, value }: { criterion: string; value: any }) =
     ? "bg-warning"
     : "bg-destructive";
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5 rounded-md border bg-muted/20 p-3">
       <div className="flex justify-between items-center text-sm">
-        <span className="capitalize text-card-foreground">{label}</span>
+        <span className="capitalize font-medium text-card-foreground">{label}</span>
         <span className="text-muted-foreground tabular-nums">
           {typeof score === "number" ? score : "—"}
           {max ? `/${max}` : ""}
@@ -674,9 +734,79 @@ const BreakdownRow = ({ criterion, value }: { criterion: string; value: any }) =
           />
         </div>
       )}
+      {requirement && (
+        <p className="text-xs text-card-foreground/80">
+          <span className="font-medium">Demandé : </span>
+          <span className="text-muted-foreground">{requirement}</span>
+        </p>
+      )}
+      {evidenceCv && (
+        <p className="text-xs text-card-foreground/80">
+          <span className="font-medium">Dans le CV : </span>
+          <span className="text-muted-foreground">{evidenceCv}</span>
+        </p>
+      )}
       {comment && (
-        <p className="text-xs text-muted-foreground italic">{comment}</p>
+        <p className="text-xs text-muted-foreground italic border-l-2 border-muted pl-2">
+          {comment}
+        </p>
       )}
     </div>
+  );
+};
+
+const InterviewLinkDialog = ({
+  data,
+  onClose,
+}: {
+  data: { url: string; candidate: Candidate } | null;
+  onClose: () => void;
+}) => {
+  const copy = async () => {
+    if (!data) return;
+    try {
+      await navigator.clipboard.writeText(data.url);
+      toast.success("Lien copié dans le presse-papiers");
+    } catch {
+      toast.error("Impossible de copier — sélectionne et copie manuellement");
+    }
+  };
+  return (
+    <Dialog open={!!data} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Lien d'entretien IA</DialogTitle>
+          <DialogDescription>
+            Partagez ce lien à {data?.candidate.first_name} {data?.candidate.last_name} par
+            le canal de votre choix (email perso, WhatsApp, SMS…). Lien valide 14 jours.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Input
+              readOnly
+              value={data?.url || ""}
+              onFocus={(e) => e.currentTarget.select()}
+              className="font-mono text-xs"
+            />
+            <Button onClick={copy} size="sm" className="shrink-0 gap-1">
+              <Copy className="h-4 w-4" />
+              Copier
+            </Button>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => data && window.open(data.url, "_blank")}
+              className="gap-1"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Ouvrir dans un nouvel onglet
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };

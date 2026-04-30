@@ -75,9 +75,18 @@ serve(async (req) => {
     const langs = (request?.languages as any[] || []).map((l) => `${l.name} (niv ${l.level}/5)`).join(", ");
 
     const systemPrompt = `Tu es un recruteur expert. Tu évalues un CV par rapport à un poste avec des critères pondérés.
-Pour CHAQUE critère, donne un score 0-100 et une justification courte.
+
+POUR CHAQUE CRITÈRE, tu dois fournir :
+- score (0-100) et max (= la pondération du critère)
+- requirement : ce que demande PRÉCISÉMENT l'offre pour ce critère (cite le poste)
+- evidence_cv : ce que le CV contient EXACTEMENT pour ce critère (cite des éléments concrets : technos, années, diplôme…). Si rien : "Non mentionné dans le CV".
+- comment : 1 phrase qui explique pourquoi ce score, en mettant en relation le requirement et l'evidence_cv.
+
+NE RESTE JAMAIS VAGUE. Pour chaque score faible, dis explicitement ce qui manque vs ce qui est demandé.
+
 Calcule le score CV global comme moyenne pondérée selon les pondérations fournies.
-Identifie 2-4 forces, 2-4 préoccupations, et un résumé de 2 phrases max.`;
+Identifie 2-4 forces (concrètes, citées du CV) et 2-4 préoccupations (chacune doit citer ce que l'offre demande ET ce que le CV contient ou non).
+Le résumé fait 3-4 phrases qui relient explicitement poste, profil du candidat, et contenu du CV.`;
 
     const userPrompt = `POSTE: ${request?.title}
 Description: ${request?.description || "-"}
@@ -118,12 +127,22 @@ ${cvText}`;
                   cv_score: { type: "integer", minimum: 0, maximum: 100 },
                   breakdown: {
                     type: "object",
-                    description: "Score 0-100 par critère",
-                    additionalProperties: { type: "integer" },
+                    description: "Pour chaque critère : score, max (pondération), requirement, evidence_cv, comment",
+                    additionalProperties: {
+                      type: "object",
+                      properties: {
+                        score: { type: "integer", minimum: 0 },
+                        max: { type: "integer", minimum: 0 },
+                        requirement: { type: "string" },
+                        evidence_cv: { type: "string" },
+                        comment: { type: "string" },
+                      },
+                      required: ["score", "max", "requirement", "evidence_cv", "comment"],
+                    },
                   },
                   strengths: { type: "array", items: { type: "string" }, maxItems: 4 },
                   concerns: { type: "array", items: { type: "string" }, maxItems: 4 },
-                  summary: { type: "string", maxLength: 400 },
+                  summary: { type: "string", maxLength: 800 },
                 },
                 required: ["cv_score", "breakdown", "strengths", "concerns", "summary"],
                 additionalProperties: false,
