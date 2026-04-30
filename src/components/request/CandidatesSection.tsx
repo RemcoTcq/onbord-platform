@@ -379,6 +379,20 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
                       )}
                       <span className="ml-1 text-xs">{c.cv_storage_path ? "CV" : "Upload CV"}</span>
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => inviteToInterview(c)}
+                      disabled={invitingId === c.id || !c.email}
+                      title={!c.email ? "Email manquant" : "Inviter à l'entretien IA"}
+                    >
+                      {invitingId === c.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Mail className="h-4 w-4" />
+                      )}
+                      <span className="ml-1 text-xs">Inviter</span>
+                    </Button>
                   </div>
                 </div>
               );
