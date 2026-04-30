@@ -49,6 +49,132 @@ export type Database = {
           },
         ]
       }
+      candidate_scores: {
+        Row: {
+          ai_concerns: string[]
+          ai_strengths: string[]
+          ai_summary: string
+          candidate_id: string
+          created_at: string
+          cv_breakdown: Json
+          cv_score: number | null
+          flag: string | null
+          global_score: number | null
+          id: string
+          interview_breakdown: Json
+          interview_score: number | null
+          scored_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          ai_concerns?: string[]
+          ai_strengths?: string[]
+          ai_summary?: string
+          candidate_id: string
+          created_at?: string
+          cv_breakdown?: Json
+          cv_score?: number | null
+          flag?: string | null
+          global_score?: number | null
+          id?: string
+          interview_breakdown?: Json
+          interview_score?: number | null
+          scored_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ai_concerns?: string[]
+          ai_strengths?: string[]
+          ai_summary?: string
+          candidate_id?: string
+          created_at?: string
+          cv_breakdown?: Json
+          cv_score?: number | null
+          flag?: string | null
+          global_score?: number | null
+          id?: string
+          interview_breakdown?: Json
+          interview_score?: number | null
+          scored_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      candidates: {
+        Row: {
+          created_at: string
+          cv_storage_path: string
+          cv_text: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          linkedin_url: string
+          notes: string
+          phone: string
+          request_id: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cv_storage_path?: string
+          cv_text?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          linkedin_url?: string
+          notes?: string
+          phone?: string
+          request_id: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cv_storage_path?: string
+          cv_text?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          linkedin_url?: string
+          notes?: string
+          phone?: string
+          request_id?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      interview_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       interview_requests: {
         Row: {
           confirmed_slot: Json | null
@@ -109,6 +235,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      interview_sessions: {
+        Row: {
+          candidate_id: string
+          completed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          started_at: string | null
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_id: string
+          completed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_id?: string
+          completed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          started_at?: string | null
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -273,6 +435,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      request_scoring_config: {
+        Row: {
+          created_at: string
+          cv_criteria: Json
+          cv_weight: number
+          green_threshold: number
+          id: string
+          interview_max_turns: number
+          interview_questions: Json
+          interview_weight: number
+          request_id: string
+          updated_at: string
+          use_ai_generated_questions: boolean
+          yellow_threshold: number
+        }
+        Insert: {
+          created_at?: string
+          cv_criteria?: Json
+          cv_weight?: number
+          green_threshold?: number
+          id?: string
+          interview_max_turns?: number
+          interview_questions?: Json
+          interview_weight?: number
+          request_id: string
+          updated_at?: string
+          use_ai_generated_questions?: boolean
+          yellow_threshold?: number
+        }
+        Update: {
+          created_at?: string
+          cv_criteria?: Json
+          cv_weight?: number
+          green_threshold?: number
+          id?: string
+          interview_max_turns?: number
+          interview_questions?: Json
+          interview_weight?: number
+          request_id?: string
+          updated_at?: string
+          use_ai_generated_questions?: boolean
+          yellow_threshold?: number
+        }
+        Relationships: []
       }
       requests: {
         Row: {
