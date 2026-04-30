@@ -37,12 +37,26 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data: candData } = await supabase
       .from("candidates")
-      .select("*, candidate_scores(cv_score, global_score, flag, ai_summary)")
+      .select("*")
       .eq("request_id", requestId)
       .order("created_at", { ascending: false });
-    setCandidates((data as any) || []);
+    const list = (candData as any[]) || [];
+    if (list.length > 0) {
+      const ids = list.map((c) => c.id);
+      const { data: scoresData } = await supabase
+        .from("candidate_scores")
+        .select("candidate_id, cv_score, global_score, flag, ai_summary")
+        .in("candidate_id", ids);
+      const byId = new Map<string, any>();
+      (scoresData || []).forEach((s: any) => byId.set(s.candidate_id, s));
+      list.forEach((c: any) => {
+        const s = byId.get(c.id);
+        c.candidate_scores = s ? [s] : [];
+      });
+    }
+    setCandidates(list);
     setLoading(false);
   };
 
