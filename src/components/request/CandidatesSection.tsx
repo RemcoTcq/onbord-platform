@@ -48,7 +48,70 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
 
   useEffect(() => {
     load();
+    supabase
+      .from("requests")
+      .select("title")
+      .eq("id", requestId)
+      .maybeSingle()
+      .then(({ data }) => setRequestTitle((data as any)?.title || ""));
   }, [requestId]);
+
+  const inviteToInterview = async (candidate: Candidate) => {
+    if (!candidate.email) {
+      toast.error("Email manquant pour ce candidat");
+      return;
+    }
+    setInvitingId(candidate.id);
+    try {
+      // Reuse existing pending session or create a new one
+      const { data: existing } = await supabase
+        .from("interview_sessions")
+        .select("id, token, status")
+        .eq("candidate_id", candidate.id)
+        .in("status", ["pending", "in_progress"])
+        .maybeSingle();
+
+      let token = (existing as any)?.token as string | undefined;
+      if (!token) {
+        const { data: created, error: insErr } = await supabase
+          .from("interview_sessions")
+          .insert({ candidate_id: candidate.id })
+          .select("token")
+          .single();
+        if (insErr) throw insErr;
+        token = (created as any).token;
+      }
+
+      const interviewUrl = `${window.location.origin}/interview/${token}`;
+
+      const { error: emailErr } = await supabase.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "interview-invitation",
+          recipientEmail: candidate.email,
+          idempotencyKey: `interview-invite-${candidate.id}-${token}`,
+          templateData: {
+            candidateFirstName: candidate.first_name,
+            jobTitle: requestTitle,
+            interviewUrl,
+            estimatedMinutes: 10,
+          },
+        },
+      });
+      if (emailErr) throw emailErr;
+
+      await supabase
+        .from("candidates")
+        .update({ status: "interview_invited" })
+        .eq("id", candidate.id);
+
+      toast.success(`Invitation envoyée à ${candidate.email}`);
+      load();
+    } catch (err: any) {
+      toast.error(err?.message || "Envoi de l'invitation échoué");
+    } finally {
+      setInvitingId(null);
+    }
+  };
 
   const parseCsv = (text: string): Record<string, string>[] => {
     const lines = text.split(/\r?\n/).filter((l) => l.trim());
