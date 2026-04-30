@@ -369,15 +369,25 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
             <Loader2 className="h-6 w-6 animate-spin" />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="text-center py-8 text-sm text-muted-foreground">
-            {candidates.length === 0
-              ? "Aucun candidat. Importe un CSV pour commencer."
-              : "Aucun candidat ne correspond au filtre."}
+          <div className="flex flex-col items-center text-center py-10 text-sm text-muted-foreground gap-2">
+            <Users className="h-10 w-10 opacity-30" />
+            {candidates.length === 0 ? (
+              <>
+                <p className="font-medium text-card-foreground">Aucun candidat pour le moment</p>
+                <p className="text-xs max-w-sm">
+                  Importe un CSV pour ajouter tes premiers candidats, puis upload leur CV pour
+                  obtenir un score automatique.
+                </p>
+              </>
+            ) : (
+              <p>Aucun candidat ne correspond à ce filtre.</p>
+            )}
           </div>
         ) : (
           <div className="space-y-2">
             {filtered.map((c) => {
               const score = c.candidate_scores?.[0];
+              const isScoring = c.cv_storage_path && !score;
               return (
                 <div
                   key={c.id}
@@ -400,12 +410,19 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
                           </Badge>
                         </button>
                       )}
+                      {isScoring && (
+                        <Badge variant="secondary" className="text-xs gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Scoring…
+                        </Badge>
+                      )}
                       <Badge variant="outline" className="text-xs">
-                        {c.status}
+                        {STATUS_LABELS[c.status] || c.status}
                       </Badge>
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
-                      {c.email} {c.phone && `· ${c.phone}`}
+                      {c.email || <span className="italic">email manquant</span>}
+                      {c.phone && ` · ${c.phone}`}
                     </p>
                     {score?.ai_summary && (
                       <p className="text-xs text-card-foreground/70 mt-1 line-clamp-2">
