@@ -43,6 +43,7 @@ const App = () => (
             <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
             <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
             <Route path="/interview/:token" element={<Interview />} />
+            <Route path="/interview-done" element={<InterviewDone />} />
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
