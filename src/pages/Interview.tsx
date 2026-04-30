@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Send, CheckCircle, AlertTriangle } from "lucide-react";
 
+const REDIRECT_SECONDS = 5;
+
 type Msg = { role: "user" | "assistant"; content: string };
 
 const FN_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
