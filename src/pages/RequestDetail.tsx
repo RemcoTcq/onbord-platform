@@ -303,6 +303,9 @@ const RequestDetail = () => {
           </CardContent>
         </Card>
 
+        {/* Mes candidats (import + scoring) */}
+        <CandidatesSection requestId={request.id} />
+
         {/* Proposed profiles (visible to owner + admin) */}
         <ProposedProfilesSection
           requestId={request.id}
