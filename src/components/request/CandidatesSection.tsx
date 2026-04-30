@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Upload, FileText, Loader2, Users, RefreshCw, Mail, Info, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
+import { Upload, FileText, Loader2, Users, RefreshCw, Link as LinkIcon, Info, CheckCircle2, AlertTriangle, XCircle, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -66,7 +66,8 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
   const [loading, setLoading] = useState(true);
   const [importing, setImporting] = useState(false);
   const [uploadingCv, setUploadingCv] = useState<string | null>(null);
-  const [invitingId, setInvitingId] = useState<string | null>(null);
+  const [generatingLinkId, setGeneratingLinkId] = useState<string | null>(null);
+  const [interviewLink, setInterviewLink] = useState<{ url: string; candidate: Candidate } | null>(null);
   const [filter, setFilter] = useState<"all" | "green" | "yellow" | "red">("all");
   const [requestTitle, setRequestTitle] = useState<string>("");
   const [detailsCandidate, setDetailsCandidate] = useState<Candidate | null>(null);
@@ -108,14 +109,9 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
       .then(({ data }) => setRequestTitle((data as any)?.title || ""));
   }, [requestId]);
 
-  const inviteToInterview = async (candidate: Candidate) => {
-    if (!candidate.email) {
-      toast.error("Email manquant pour ce candidat");
-      return;
-    }
-    setInvitingId(candidate.id);
+  const generateInterviewLink = async (candidate: Candidate) => {
+    setGeneratingLinkId(candidate.id);
     try {
-      // Reuse existing pending session or create a new one
       const { data: existing } = await supabase
         .from("interview_sessions")
         .select("id, token, status")
@@ -134,47 +130,93 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
         token = (created as any).token;
       }
 
-      const interviewUrl = `${window.location.origin}/interview/${token}`;
+      const url = `${window.location.origin}/interview/${token}`;
 
-      const { error: emailErr } = await supabase.functions.invoke("send-transactional-email", {
-        body: {
-          templateName: "interview-invitation",
-          recipientEmail: candidate.email,
-          idempotencyKey: `interview-invite-${candidate.id}-${token}`,
-          templateData: {
-            candidateFirstName: candidate.first_name,
-            jobTitle: requestTitle,
-            interviewUrl,
-            estimatedMinutes: 10,
-          },
-        },
-      });
-      if (emailErr) throw emailErr;
+      if (candidate.status !== "interview_invited") {
+        await supabase
+          .from("candidates")
+          .update({ status: "interview_invited" })
+          .eq("id", candidate.id);
+      }
 
-      await supabase
-        .from("candidates")
-        .update({ status: "interview_invited" })
-        .eq("id", candidate.id);
-
-      toast.success(`Invitation envoyée à ${candidate.email}`);
+      setInterviewLink({ url, candidate });
       load();
     } catch (err: any) {
-      toast.error(err?.message || "Envoi de l'invitation échoué");
+      toast.error(err?.message || "Génération du lien échouée");
     } finally {
-      setInvitingId(null);
+      setGeneratingLinkId(null);
     }
   };
 
-  const parseCsv = (text: string): Record<string, string>[] => {
-    const lines = text.split(/\r?\n/).filter((l) => l.trim());
-    if (lines.length < 2) return [];
-    const headers = lines[0].split(/[,;]/).map((h) => h.trim().toLowerCase());
-    return lines.slice(1).map((line) => {
-      const values = line.split(/[,;]/).map((v) => v.trim());
+  // CSV parsing — RFC-ish, handles quoted fields, BOM, auto separator, accented headers
+  const stripAccents = (s: string) =>
+    s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+  const detectSeparator = (headerLine: string): string => {
+    const candidates = [",", ";", "\t"];
+    let best = ",";
+    let bestCount = -1;
+    for (const sep of candidates) {
+      // Count separators outside quotes
+      let inQuotes = false;
+      let count = 0;
+      for (let i = 0; i < headerLine.length; i++) {
+        const ch = headerLine[i];
+        if (ch === '"') inQuotes = !inQuotes;
+        else if (!inQuotes && ch === sep) count++;
+      }
+      if (count > bestCount) {
+        best = sep;
+        bestCount = count;
+      }
+    }
+    return best;
+  };
+
+  const parseCsvLine = (line: string, sep: string): string[] => {
+    const out: string[] = [];
+    let cur = "";
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (line[i + 1] === '"') {
+            cur += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          cur += ch;
+        }
+      } else {
+        if (ch === '"') inQuotes = true;
+        else if (ch === sep) {
+          out.push(cur);
+          cur = "";
+        } else cur += ch;
+      }
+    }
+    out.push(cur);
+    return out.map((v) => v.trim());
+  };
+
+  const parseCsv = (text: string): { rows: Record<string, string>[]; total: number } => {
+    // Strip BOM
+    const cleaned = text.replace(/^\uFEFF/, "");
+    const lines = cleaned.split(/\r?\n/).filter((l) => l.trim().length > 0);
+    if (lines.length < 2) return { rows: [], total: 0 };
+    const sep = detectSeparator(lines[0]);
+    const rawHeaders = parseCsvLine(lines[0], sep);
+    const headers = rawHeaders.map((h) => stripAccents(h.toLowerCase().trim()));
+    const rows = lines.slice(1).map((line) => {
+      const values = parseCsvLine(line, sep);
       const row: Record<string, string> = {};
-      headers.forEach((h, i) => (row[h] = values[i] || ""));
+      headers.forEach((h, i) => (row[h] = (values[i] || "").trim()));
       return row;
     });
+    return { rows, total: lines.length - 1 };
   };
 
   const matchField = (row: Record<string, string>, keys: string[]) => {
