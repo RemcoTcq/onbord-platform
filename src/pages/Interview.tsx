@@ -24,8 +24,27 @@ const Interview = () => {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [countdown, setCountdown] = useState(REDIRECT_SECONDS);
   const scrollRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
+
+  // Auto-redirect when interview ends
+  useEffect(() => {
+    if (!finished) return;
+    setCountdown(REDIRECT_SECONDS);
+    const id = setInterval(() => {
+      setCountdown((s) => {
+        const next = s - 1;
+        if (next <= 0) {
+          clearInterval(id);
+          try { window.close(); } catch { /* noop */ }
+          window.location.replace("/interview-done");
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [finished]);
 
   useEffect(() => {
     if (!token) return;
