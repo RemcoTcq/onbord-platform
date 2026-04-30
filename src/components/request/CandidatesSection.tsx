@@ -237,27 +237,38 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
     setImporting(true);
     try {
       const text = await file.text();
-      const rows = parseCsv(text);
+      const { rows, total } = parseCsv(text);
       if (rows.length === 0) {
-        toast.error("CSV vide ou invalide");
+        toast.error("CSV vide ou invalide. Vérifiez l'en-tête (prenom, nom, email…).");
         return;
       }
       if (rows.length > 200) {
         toast.error("Maximum 200 candidats par import");
         return;
       }
-      const toInsert = rows.map((r) => ({
-        request_id: requestId,
-        first_name: matchField(r, ["prenom", "first", "firstname"]).slice(0, 100),
-        last_name: matchField(r, ["nom", "last", "lastname"]).slice(0, 100),
-        email: matchField(r, ["email", "mail"]).slice(0, 255),
-        phone: matchField(r, ["phone", "tel", "telephone"]).slice(0, 50),
-        linkedin_url: matchField(r, ["linkedin", "url"]).slice(0, 500),
-        source: "csv_import",
-      }));
+      const toInsert = rows
+        .map((r) => ({
+          request_id: requestId,
+          first_name: matchField(r, ["prenom", "first", "firstname"]).slice(0, 100),
+          last_name: matchField(r, ["nom", "last", "lastname"]).slice(0, 100),
+          email: matchField(r, ["email", "mail", "courriel"]).slice(0, 255),
+          phone: matchField(r, ["phone", "tel", "telephone", "mobile", "gsm"]).slice(0, 50),
+          linkedin_url: matchField(r, ["linkedin", "url"]).slice(0, 500),
+          source: "csv_import",
+        }))
+        .filter((c) => c.first_name || c.last_name || c.email);
+      if (toInsert.length === 0) {
+        toast.error("Aucune ligne exploitable. Vérifiez les noms de colonnes.");
+        return;
+      }
       const { error } = await supabase.from("candidates").insert(toInsert);
       if (error) throw error;
-      toast.success(`${toInsert.length} candidat(s) importé(s)`);
+      const skipped = total - toInsert.length;
+      toast.success(
+        skipped > 0
+          ? `${toInsert.length} candidat(s) importé(s) (${skipped} ligne(s) ignorée(s))`
+          : `${toInsert.length} candidat(s) importé(s)`
+      );
       load();
     } catch (err: any) {
       toast.error(err?.message || "Import échoué");
