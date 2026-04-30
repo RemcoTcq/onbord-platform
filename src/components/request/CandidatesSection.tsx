@@ -701,10 +701,12 @@ const ScoreTile = ({
 
 const BreakdownRow = ({ criterion, value }: { criterion: string; value: any }) => {
   const label = CRITERIA_LABELS[criterion] || criterion.replace(/_/g, " ");
-  // value can be a number or { score, max, comment }
-  const score = typeof value === "object" && value !== null ? value.score : value;
-  const max = typeof value === "object" && value !== null ? value.max : null;
-  const comment = typeof value === "object" && value !== null ? value.comment : null;
+  const isObj = typeof value === "object" && value !== null;
+  const score = isObj ? value.score : value;
+  const max = isObj ? value.max : null;
+  const comment = isObj ? value.comment : null;
+  const requirement = isObj ? value.requirement : null;
+  const evidenceCv = isObj ? value.evidence_cv : null;
   const ratio = typeof score === "number" && typeof max === "number" && max > 0
     ? score / max
     : null;
@@ -716,9 +718,9 @@ const BreakdownRow = ({ criterion, value }: { criterion: string; value: any }) =
     ? "bg-warning"
     : "bg-destructive";
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5 rounded-md border bg-muted/20 p-3">
       <div className="flex justify-between items-center text-sm">
-        <span className="capitalize text-card-foreground">{label}</span>
+        <span className="capitalize font-medium text-card-foreground">{label}</span>
         <span className="text-muted-foreground tabular-nums">
           {typeof score === "number" ? score : "—"}
           {max ? `/${max}` : ""}
@@ -732,9 +734,79 @@ const BreakdownRow = ({ criterion, value }: { criterion: string; value: any }) =
           />
         </div>
       )}
+      {requirement && (
+        <p className="text-xs text-card-foreground/80">
+          <span className="font-medium">Demandé : </span>
+          <span className="text-muted-foreground">{requirement}</span>
+        </p>
+      )}
+      {evidenceCv && (
+        <p className="text-xs text-card-foreground/80">
+          <span className="font-medium">Dans le CV : </span>
+          <span className="text-muted-foreground">{evidenceCv}</span>
+        </p>
+      )}
       {comment && (
-        <p className="text-xs text-muted-foreground italic">{comment}</p>
+        <p className="text-xs text-muted-foreground italic border-l-2 border-muted pl-2">
+          {comment}
+        </p>
       )}
     </div>
+  );
+};
+
+const InterviewLinkDialog = ({
+  data,
+  onClose,
+}: {
+  data: { url: string; candidate: Candidate } | null;
+  onClose: () => void;
+}) => {
+  const copy = async () => {
+    if (!data) return;
+    try {
+      await navigator.clipboard.writeText(data.url);
+      toast.success("Lien copié dans le presse-papiers");
+    } catch {
+      toast.error("Impossible de copier — sélectionne et copie manuellement");
+    }
+  };
+  return (
+    <Dialog open={!!data} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Lien d'entretien IA</DialogTitle>
+          <DialogDescription>
+            Partagez ce lien à {data?.candidate.first_name} {data?.candidate.last_name} par
+            le canal de votre choix (email perso, WhatsApp, SMS…). Lien valide 14 jours.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div className="flex items-center gap-2">
+            <Input
+              readOnly
+              value={data?.url || ""}
+              onFocus={(e) => e.currentTarget.select()}
+              className="font-mono text-xs"
+            />
+            <Button onClick={copy} size="sm" className="shrink-0 gap-1">
+              <Copy className="h-4 w-4" />
+              Copier
+            </Button>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => data && window.open(data.url, "_blank")}
+              className="gap-1"
+            >
+              <ExternalLink className="h-4 w-4" />
+              Ouvrir dans un nouvel onglet
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
