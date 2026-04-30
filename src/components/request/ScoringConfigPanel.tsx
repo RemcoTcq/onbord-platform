@@ -121,12 +121,41 @@ export const ScoringConfigPanel = ({ requestId }: { requestId: string }) => {
         interview_max_turns: config.interview_max_turns,
       })
       .eq("request_id", requestId);
-    setSaving(false);
     if (error) {
+      setSaving(false);
       toast.error("Erreur lors de la sauvegarde");
       return;
     }
     toast.success("Paramètres enregistrés");
+
+    // Recalculate scores for candidates that already have a parsed CV
+    const { data: cvCandidates } = await supabase
+      .from("candidates")
+      .select("id, cv_text")
+      .eq("request_id", requestId)
+      .neq("cv_text", "");
+
+    const ids = (cvCandidates || []).map((c: any) => c.id);
+    if (ids.length > 0) {
+      toast.info(`Recalcul des scores pour ${ids.length} candidat(s)...`);
+      let success = 0;
+      let failed = 0;
+      // Process sequentially to avoid rate limits on the AI gateway
+      for (const id of ids) {
+        const { error: scErr } = await supabase.functions.invoke("score-cv", {
+          body: { candidateId: id },
+        });
+        if (scErr) failed++;
+        else success++;
+      }
+      if (failed === 0) {
+        toast.success(`${success} score(s) recalculé(s)`);
+      } else {
+        toast.warning(`${success} recalculé(s), ${failed} échec(s)`);
+      }
+    }
+
+    setSaving(false);
     setOpen(false);
   };
 
