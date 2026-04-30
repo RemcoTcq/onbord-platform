@@ -100,7 +100,7 @@ export const ScoringConfigPanel = ({ requestId }: { requestId: string }) => {
 
   const handleSave = async () => {
     if (config.yellow_threshold >= config.green_threshold) {
-      toast.error("Le seuil orange doit être inférieur au seuil vert");
+      toast.error("Le seuil rouge doit être inférieur au seuil vert");
       return;
     }
     if (cvCriteriaTotal !== 100) {
@@ -212,7 +212,7 @@ export const ScoringConfigPanel = ({ requestId }: { requestId: string }) => {
                     />
                   </div>
                   <div>
-                    <Label className="text-xs text-muted-foreground">Orange (≥)</Label>
+                    <Label className="text-xs text-muted-foreground">Rouge (≥)</Label>
                     <Input
                       type="number"
                       min={0}
