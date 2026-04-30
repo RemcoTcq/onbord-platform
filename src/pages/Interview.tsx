@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Send, CheckCircle, AlertTriangle } from "lucide-react";
 
+const REDIRECT_SECONDS = 5;
+
 type Msg = { role: "user" | "assistant"; content: string };
 
 const FN_BASE = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
@@ -22,8 +24,27 @@ const Interview = () => {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [countdown, setCountdown] = useState(REDIRECT_SECONDS);
   const scrollRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
+
+  // Auto-redirect when interview ends
+  useEffect(() => {
+    if (!finished) return;
+    setCountdown(REDIRECT_SECONDS);
+    const id = setInterval(() => {
+      setCountdown((s) => {
+        const next = s - 1;
+        if (next <= 0) {
+          clearInterval(id);
+          try { window.close(); } catch { /* noop */ }
+          window.location.replace("/interview-done");
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(id);
+  }, [finished]);
 
   useEffect(() => {
     if (!token) return;
@@ -158,6 +179,10 @@ const Interview = () => {
                 </h2>
                 <p className="text-sm text-muted-foreground">
                   Merci d'avoir pris le temps. L'équipe va revenir vers toi rapidement.
+                </p>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Cette page se ferme dans {Math.max(0, countdown)} seconde
+                  {countdown > 1 ? "s" : ""}…
                 </p>
               </CardContent>
             </Card>
