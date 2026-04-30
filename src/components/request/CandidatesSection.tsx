@@ -76,7 +76,7 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
       const ids = list.map((c) => c.id);
       const { data: scoresData } = await supabase
         .from("candidate_scores")
-        .select("candidate_id, cv_score, global_score, flag, ai_summary")
+        .select("candidate_id, cv_score, global_score, interview_score, flag, ai_summary, ai_strengths, ai_concerns, cv_breakdown, interview_breakdown")
         .in("candidate_id", ids);
       const byId = new Map<string, any>();
       (scoresData || []).forEach((s: any) => byId.set(s.candidate_id, s));
