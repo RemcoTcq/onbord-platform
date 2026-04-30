@@ -25,6 +25,7 @@ import {
 import { AdminRequestEditForm } from "@/components/admin/AdminRequestEditForm";
 import { getTalentTypeLabel } from "@/lib/talent-type";
 import { ProposedProfilesSection } from "@/components/request/ProposedProfilesSection";
+import { ScoringConfigPanel } from "@/components/request/ScoringConfigPanel";
 import { AdminProfilesManager } from "@/components/admin/AdminProfilesManager";
 import { AdminInterviewsPanel } from "@/components/admin/AdminInterviewsPanel";
 
@@ -199,22 +200,25 @@ const RequestDetail = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between mb-4 gap-3 flex-wrap">
               <h3 className="text-lg font-semibold text-card-foreground">Progression</h3>
-              {isAdmin && (
-                <Select
-                  value={request.status}
-                  onValueChange={async (v) => {
-                    const { error } = await supabase.from("requests").update({ status: v }).eq("id", request.id);
-                    if (error) { toast.error("Erreur de mise à jour"); return; }
-                    setRequest({ ...request, status: v });
-                    toast.success("Statut mis à jour");
-                  }}
-                >
-                  <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              )}
+              <div className="flex items-center gap-2">
+                <ScoringConfigPanel requestId={request.id} />
+                {isAdmin && (
+                  <Select
+                    value={request.status}
+                    onValueChange={async (v) => {
+                      const { error } = await supabase.from("requests").update({ status: v }).eq("id", request.id);
+                      if (error) { toast.error("Erreur de mise à jour"); return; }
+                      setRequest({ ...request, status: v });
+                      toast.success("Statut mis à jour");
+                    }}
+                  >
+                    <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {STATUSES.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
             </div>
             <div className="relative flex items-start justify-between">
               <div className="absolute top-5 left-[10%] right-[10%] h-0.5 bg-card-foreground/10" />
