@@ -25,6 +25,7 @@ import {
 import { AdminRequestEditForm } from "@/components/admin/AdminRequestEditForm";
 import { getTalentTypeLabel } from "@/lib/talent-type";
 import { ProposedProfilesSection } from "@/components/request/ProposedProfilesSection";
+import { ScoringConfigPanel } from "@/components/request/ScoringConfigPanel";
 import { AdminProfilesManager } from "@/components/admin/AdminProfilesManager";
 import { AdminInterviewsPanel } from "@/components/admin/AdminInterviewsPanel";
 
