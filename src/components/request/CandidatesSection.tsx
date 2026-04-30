@@ -60,6 +60,7 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
   const [invitingId, setInvitingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "green" | "yellow" | "red">("all");
   const [requestTitle, setRequestTitle] = useState<string>("");
+  const [detailsCandidate, setDetailsCandidate] = useState<Candidate | null>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
   const cvInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
