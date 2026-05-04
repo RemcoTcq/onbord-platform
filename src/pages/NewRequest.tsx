@@ -145,56 +145,9 @@ const NewRequest = () => {
           )}
         </div>
 
-        {/* Stepper — Vercel-style */}
-        <div className="space-y-3">
-          {/* Progress bar */}
-          <div className="relative h-0.5 w-full overflow-hidden rounded-full bg-border">
-            <div
-              className="absolute inset-y-0 left-0 bg-primary transition-all duration-500 ease-out"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-          {/* Step labels */}
-          <div className="grid grid-cols-3 gap-2">
-            {steps.map((label, i) => {
-              const done = i < step;
-              const current = i === step;
-              return (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => i < step && setStep(i)}
-                  disabled={i > step}
-                  className={cn(
-                    "group flex items-center gap-2 text-left transition-colors",
-                    i < step && "cursor-pointer hover:text-foreground",
-                    i > step && "cursor-default",
-                  )}
-                >
-                  <span
-                    className={cn(
-                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10.5px] font-semibold transition-all tabular-nums",
-                      done && "bg-success text-success-foreground",
-                      current && "bg-primary text-primary-foreground ring-4 ring-primary/15",
-                      !done && !current && "bg-muted text-muted-foreground",
-                    )}
-                  >
-                    {done ? <Check className="h-3 w-3" /> : i + 1}
-                  </span>
-                  <span
-                    className={cn(
-                      "text-[12.5px] font-medium",
-                      current && "text-foreground",
-                      done && "text-foreground/80",
-                      !done && !current && "text-muted-foreground",
-                    )}
-                  >
-                    {label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Nouvelle demande</h1>
+          <p className="text-sm text-muted-foreground mt-1.5">Décrivez votre besoin, on s'occupe du reste.</p>
         </div>
 
         <div className="surface rounded-xl p-6 lg:p-8 animate-fade-in">
