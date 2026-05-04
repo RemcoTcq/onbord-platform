@@ -129,28 +129,27 @@ const NewRequest = () => {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-3xl space-y-6">
-        {/* Save status discreet */}
-        <div className="flex items-center justify-end gap-1.5 text-[11px] h-4">
-          {saveStatus === "saving" && (
-            <span className="flex items-center gap-1 text-muted-foreground">
-              <Loader2 className="h-3 w-3 animate-spin" /> Sauvegarde…
-            </span>
-          )}
-          {saveStatus === "saved" && (
-            <span className="flex items-center gap-1 text-success">
-              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-soft" />
-              Brouillon enregistré
-            </span>
-          )}
+      <div className="mx-auto max-w-3xl">
+        {/* Subtle header — title + save status inline */}
+        <div className="flex items-center gap-3 mb-6">
+          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">Nouvelle demande</h1>
+          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            {saveStatus === "saving" && (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                <span>Sauvegarde…</span>
+              </>
+            )}
+            {saveStatus === "saved" && (
+              <>
+                <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                <span>Enregistré</span>
+              </>
+            )}
+          </div>
         </div>
 
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Nouvelle demande</h1>
-          <p className="text-sm text-muted-foreground mt-1.5">Décrivez votre besoin, on s'occupe du reste.</p>
-        </div>
-
-        <div className="surface rounded-xl p-6 lg:p-8 animate-fade-in">
+        <div className="animate-fade-in">
           {step === 0 && <StepNaturalLanguage data={data} onChange={handleChange} onNext={() => setStep(1)} />}
           {step === 1 && (
             <StepProfileAndJob data={data} onChange={handleChange} onNext={() => setStep(2)} onBack={() => setStep(0)} />
