@@ -768,25 +768,36 @@ const ScoreTile = ({
   label: string;
   value: number | null | undefined;
   flag?: string | null;
-}) => (
-  <div className="rounded-lg border bg-muted/30 p-3 text-center">
-    <p className="text-xs text-muted-foreground">{label}</p>
-    <p
-      className={`text-2xl font-semibold mt-1 ${
-        flag === "green"
-          ? "text-success"
-          : flag === "yellow"
-          ? "text-warning"
-          : flag === "red"
-          ? "text-destructive"
-          : "text-card-foreground"
-      }`}
-    >
-      {value ?? "—"}
-      {value != null && <span className="text-sm text-muted-foreground">/100</span>}
-    </p>
-  </div>
-);
+}) => {
+  const flagColor =
+    flag === "green"
+      ? "text-success"
+      : flag === "yellow"
+      ? "text-warning"
+      : flag === "red"
+      ? "text-destructive"
+      : "text-foreground";
+  const dotColor =
+    flag === "green"
+      ? "bg-success"
+      : flag === "yellow"
+      ? "bg-warning"
+      : flag === "red"
+      ? "bg-destructive"
+      : "bg-muted-foreground/40";
+  return (
+    <div className="rounded-lg border border-border bg-card p-3">
+      <div className="flex items-center gap-1.5">
+        <span className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+      </div>
+      <p className={`text-2xl font-semibold mt-1.5 tabular-nums tracking-tight ${flagColor}`}>
+        {value ?? "—"}
+        {value != null && <span className="text-sm text-muted-foreground font-normal">/100</span>}
+      </p>
+    </div>
+  );
+};
 
 const BreakdownRow = ({ criterion, value }: { criterion: string; value: any }) => {
   const label = CRITERIA_LABELS[criterion] || criterion.replace(/_/g, " ");
