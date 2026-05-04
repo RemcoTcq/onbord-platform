@@ -369,217 +369,252 @@ export const CandidatesSection = ({ requestId }: { requestId: string }) => {
   };
 
   return (
-    <Card>
-      <CardContent className="p-6 space-y-4">
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-card-foreground" />
-            <h3 className="text-lg font-semibold text-card-foreground">
-              Mes candidats ({candidates.length})
-            </h3>
+    <div className="rounded-xl border border-border bg-card overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4 border-b border-border bg-gradient-subtle">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary ring-1 ring-primary/15">
+            <Users className="h-4 w-4" />
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={load} title="Actualiser">
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-            <input
-              ref={csvInputRef}
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={handleCsvUpload}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => csvInputRef.current?.click()}
-              disabled={importing}
-            >
-              {importing ? (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              ) : (
-                <Upload className="h-4 w-4 mr-2" />
-              )}
-              Importer CSV
-            </Button>
+          <div>
+            <h3 className="text-sm font-semibold text-foreground tracking-tight">
+              Mes candidats
+            </h3>
+            <p className="text-xs text-muted-foreground tabular-nums">
+              {candidates.length} candidat{candidates.length > 1 ? "s" : ""}
+            </p>
           </div>
         </div>
-
-        <p className="text-xs text-muted-foreground">
-          Format CSV attendu : colonnes <code>prenom</code>, <code>nom</code>, <code>email</code>,{" "}
-          <code>phone</code>, <code>linkedin</code> (séparateur , ou ;).
-        </p>
-
-        {/* Filters */}
-        {candidates.length > 0 && (
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              variant={filter === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("all")}
-            >
-              Tous ({candidates.length})
-            </Button>
-            <Button
-              variant={filter === "green" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("green")}
-              className={filter === "green" ? FLAG_STYLES.green : ""}
-            >
-              Vert ({counts.green})
-            </Button>
-            <Button
-              variant={filter === "yellow" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("yellow")}
-              className={filter === "yellow" ? FLAG_STYLES.yellow : ""}
-            >
-              Orange ({counts.yellow})
-            </Button>
-            <Button
-              variant={filter === "red" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFilter("red")}
-              className={filter === "red" ? FLAG_STYLES.red : ""}
-            >
-              Rouge ({counts.red})
-            </Button>
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin" />
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center text-center py-10 text-sm text-muted-foreground gap-2">
-            <Users className="h-10 w-10 opacity-30" />
-            {candidates.length === 0 ? (
-              <>
-                <p className="font-medium text-card-foreground">Aucun candidat pour le moment</p>
-                <p className="text-xs max-w-sm">
-                  Importe un CSV pour ajouter tes premiers candidats, puis upload leur CV pour
-                  obtenir un score automatique.
-                </p>
-              </>
+        <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="icon" onClick={load} title="Actualiser" className="h-8 w-8">
+            <RefreshCw className="h-3.5 w-3.5" />
+          </Button>
+          <input
+            ref={csvInputRef}
+            type="file"
+            accept=".csv"
+            className="hidden"
+            onChange={handleCsvUpload}
+          />
+          <Button
+            variant="default"
+            size="sm"
+            onClick={() => csvInputRef.current?.click()}
+            disabled={importing}
+            className="h-8 gap-1.5"
+          >
+            {importing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
-              <p>Aucun candidat ne correspond à ce filtre.</p>
+              <Upload className="h-3.5 w-3.5" />
             )}
+            Importer CSV
+          </Button>
+        </div>
+      </div>
+
+      <div className="px-5 py-3 border-b border-border bg-muted/30">
+        <p className="text-xs text-muted-foreground">
+          Format CSV : colonnes <code className="px-1 py-0.5 rounded bg-muted text-foreground/80 font-mono text-[10px]">prenom</code>, <code className="px-1 py-0.5 rounded bg-muted text-foreground/80 font-mono text-[10px]">nom</code>, <code className="px-1 py-0.5 rounded bg-muted text-foreground/80 font-mono text-[10px]">email</code>, <code className="px-1 py-0.5 rounded bg-muted text-foreground/80 font-mono text-[10px]">phone</code>, <code className="px-1 py-0.5 rounded bg-muted text-foreground/80 font-mono text-[10px]">linkedin</code> · séparateur <kbd className="px-1 py-0.5 rounded bg-muted text-foreground/80 font-mono text-[10px]">,</kbd> ou <kbd className="px-1 py-0.5 rounded bg-muted text-foreground/80 font-mono text-[10px]">;</kbd>
+        </p>
+      </div>
+
+      {/* Filters */}
+      {candidates.length > 0 && (
+        <div className="flex gap-1.5 flex-wrap px-5 py-3 border-b border-border">
+          {([
+            { key: "all", label: "Tous", count: candidates.length, dot: "bg-muted-foreground" },
+            { key: "green", label: "Vert", count: counts.green, dot: "bg-success" },
+            { key: "yellow", label: "Orange", count: counts.yellow, dot: "bg-warning" },
+            { key: "red", label: "Rouge", count: counts.red, dot: "bg-destructive" },
+          ] as const).map((f) => (
+            <button
+              key={f.key}
+              onClick={() => setFilter(f.key as any)}
+              className={`group inline-flex items-center gap-1.5 rounded-md border px-2.5 h-7 text-xs font-medium transition-all ${
+                filter === f.key
+                  ? "bg-foreground text-background border-foreground shadow-sm"
+                  : "bg-card text-foreground border-border hover:border-foreground/30 hover:bg-muted"
+              }`}
+            >
+              <span className={`h-1.5 w-1.5 rounded-full ${f.dot}`} />
+              {f.label}
+              <span className={`tabular-nums ${filter === f.key ? "opacity-70" : "text-muted-foreground"}`}>
+                {f.count}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Body */}
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center text-center py-14 px-6 text-sm text-muted-foreground gap-2">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Users className="h-6 w-6 opacity-50" />
           </div>
-        ) : (
-          <div className="space-y-2">
-            {filtered.map((c) => {
-              const score = c.candidate_scores?.[0];
-              const isScoring = c.cv_storage_path && !score;
-              return (
-                <div
-                  key={c.id}
-                  className="flex items-center gap-3 rounded-lg border bg-card p-3 hover:bg-accent/30 transition-colors"
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-medium text-card-foreground">
-                        {c.first_name} {c.last_name}
-                      </span>
-                      {score?.flag && (
+          {candidates.length === 0 ? (
+            <>
+              <p className="font-medium text-foreground mt-1">Aucun candidat pour le moment</p>
+              <p className="text-xs max-w-sm text-muted-foreground">
+                Importez un CSV pour ajouter vos premiers candidats, puis uploadez leurs CV pour
+                obtenir un score automatique.
+              </p>
+            </>
+          ) : (
+            <p>Aucun candidat ne correspond à ce filtre.</p>
+          )}
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-2.5">Candidat</th>
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2.5 hidden md:table-cell">Contact</th>
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2.5">Score</th>
+                <th className="text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-3 py-2.5 hidden lg:table-cell">Statut</th>
+                <th className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground px-5 py-2.5">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((c) => {
+                const score = c.candidate_scores?.[0];
+                const isScoring = c.cv_storage_path && !score;
+                const initials = `${c.first_name?.[0] || ""}${c.last_name?.[0] || ""}`.toUpperCase() || "?";
+                return (
+                  <tr
+                    key={c.id}
+                    className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors group"
+                  >
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/15 to-primary/5 text-primary text-xs font-semibold ring-1 ring-primary/10">
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground truncate">
+                            {c.first_name} {c.last_name}
+                          </p>
+                          {score?.ai_summary && (
+                            <p className="text-xs text-muted-foreground truncate max-w-[280px] mt-0.5">
+                              {score.ai_summary.split("\n")[0]}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 hidden md:table-cell">
+                      <div className="text-xs">
+                        <p className="text-foreground truncate max-w-[180px]">
+                          {c.email || <span className="italic text-muted-foreground">—</span>}
+                        </p>
+                        {c.phone && <p className="text-muted-foreground tabular-nums">{c.phone}</p>}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3">
+                      {score?.flag ? (
                         <button
                           type="button"
                           onClick={() => setDetailsCandidate(c)}
-                          className="focus:outline-none"
-                          title="Voir le détail du scoring"
+                          className={`inline-flex items-center gap-1.5 rounded-md bg-card ring-1 px-2 h-7 text-xs font-semibold tabular-nums hover:bg-muted transition-colors ${FLAG_RING[score.flag]}`}
                         >
-                          <Badge className={`${FLAG_STYLES[score.flag]} cursor-pointer hover:opacity-90`}>
-                            {score.global_score ?? score.cv_score}/100
-                          </Badge>
+                          <span className={`h-1.5 w-1.5 rounded-full ${FLAG_DOT[score.flag]}`} />
+                          {score.global_score ?? score.cv_score}
+                          <span className="text-muted-foreground font-normal">/100</span>
                         </button>
-                      )}
-                      {isScoring && (
-                        <Badge variant="secondary" className="text-xs gap-1">
+                      ) : isScoring ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                           <Loader2 className="h-3 w-3 animate-spin" />
-                          Scoring…
-                        </Badge>
+                          Analyse…
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
-                      <Badge variant="outline" className="text-xs">
+                    </td>
+                    <td className="px-3 py-3 hidden lg:table-cell">
+                      <Badge variant="outline" className="text-[10px] font-normal">
                         {STATUS_LABELS[c.status] || c.status}
                       </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {c.email || <span className="italic">email manquant</span>}
-                      {c.phone && ` · ${c.phone}`}
-                    </p>
-                    {score?.ai_summary && (
-                      <p className="text-xs text-card-foreground/70 mt-1 line-clamp-2">
-                        {score.ai_summary}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <input
-                      ref={(el) => (cvInputRefs.current[c.id] = el)}
-                      type="file"
-                      accept="application/pdf"
-                      className="hidden"
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleCvUpload(c.id, f);
-                        e.target.value = "";
-                      }}
-                    />
-                    <Button
-                      variant={c.cv_storage_path ? "ghost" : "outline"}
-                      size="sm"
-                      onClick={() => cvInputRefs.current[c.id]?.click()}
-                      disabled={uploadingCv === c.id}
-                    >
-                      {uploadingCv === c.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <FileText className="h-4 w-4" />
-                      )}
-                      <span className="ml-1 text-xs">{c.cv_storage_path ? "CV" : "Upload CV"}</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDetailsCandidate(c)}
-                      disabled={!score}
-                      title={score ? "Voir le détail du scoring" : "Score non disponible"}
-                    >
-                      <Info className="h-4 w-4" />
-                      <span className="ml-1 text-xs">Détails</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => generateInterviewLink(c)}
-                      disabled={generatingLinkId === c.id}
-                      title="Générer le lien d'entretien IA"
-                    >
-                      {generatingLinkId === c.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <LinkIcon className="h-4 w-4" />
-                      )}
-                      <span className="ml-1 text-xs">Lien entretien</span>
-                    </Button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <input
+                          ref={(el) => (cvInputRefs.current[c.id] = el)}
+                          type="file"
+                          accept="application/pdf"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) handleCvUpload(c.id, f);
+                            e.target.value = "";
+                          }}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => cvInputRefs.current[c.id]?.click()}
+                          disabled={uploadingCv === c.id}
+                          className="h-7 px-2 gap-1 text-xs"
+                          title={c.cv_storage_path ? "Remplacer le CV" : "Uploader le CV"}
+                        >
+                          {uploadingCv === c.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <FileText className={`h-3.5 w-3.5 ${c.cv_storage_path ? "text-success" : ""}`} />
+                          )}
+                          <span className="hidden sm:inline">{c.cv_storage_path ? "CV" : "CV"}</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDetailsCandidate(c)}
+                          disabled={!score}
+                          className="h-7 px-2 gap-1 text-xs"
+                          title={score ? "Voir le détail du scoring" : "Score non disponible"}
+                        >
+                          <Info className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline">Détails</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => generateInterviewLink(c)}
+                          disabled={generatingLinkId === c.id}
+                          className="h-7 px-2 gap-1 text-xs"
+                          title="Générer le lien d'entretien IA"
+                        >
+                          {generatingLinkId === c.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <LinkIcon className="h-3.5 w-3.5" />
+                          )}
+                          <span className="hidden sm:inline">Entretien</span>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
-        <CandidateDetailsDialog
-          candidate={detailsCandidate}
-          onClose={() => setDetailsCandidate(null)}
-        />
+      <CandidateDetailsDialog
+        candidate={detailsCandidate}
+        onClose={() => setDetailsCandidate(null)}
+      />
 
-        <InterviewLinkDialog
-          data={interviewLink}
-          onClose={() => setInterviewLink(null)}
-        />
-      </CardContent>
-    </Card>
+      <InterviewLinkDialog
+        data={interviewLink}
+        onClose={() => setInterviewLink(null)}
+      />
+    </div>
   );
 };
 
