@@ -5,10 +5,9 @@ import { RequestFormData } from "@/lib/request-types";
 import { TalentTypeBadge } from "@/components/TalentTypeBadge";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { getTalentTypeLabel, normalizeTalentType } from "@/lib/talent-type";
 import { toast } from "sonner";
-import { ArrowLeft, Send, Pencil, Loader2 } from "lucide-react";
+import { ArrowLeft, Send, Pencil, Loader2, CheckCircle2 } from "lucide-react";
 
 interface Props {
   data: RequestFormData;
@@ -64,19 +63,6 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
     onSubmitted(id!);
   };
 
-  const Section = ({ title, stepIdx, children }: { title: string; stepIdx: number; children: React.ReactNode }) => (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="font-semibold text-card-foreground">{title}</h3>
-        <Button variant="ghost" size="sm" onClick={() => onEdit(stepIdx)} className="gap-1 text-primary text-xs">
-          <Pencil className="h-3 w-3" /> Modifier
-        </Button>
-      </div>
-      {children}
-    </div>
-  );
-
-  // Schedule label
   let scheduleLabel = "";
   if (data.talentType === "graduate") {
     if (data.employmentType === "full_time") scheduleLabel = "Temps plein (5 jours)";
@@ -86,83 +72,123 @@ export const StepRecap = ({ data, onBack, onEdit, draftId, onSubmitted }: Props)
     scheduleLabel = data.scheduleType === "flexible" ? "Flexibles" : "Fixes";
   }
 
+  const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
+    <div className="flex items-start justify-between gap-6 py-2.5 border-b border-border/60 last:border-0">
+      <dt className="text-sm text-muted-foreground">{label}</dt>
+      <dd className="text-sm font-medium text-foreground text-right max-w-[60%]">{value}</dd>
+    </div>
+  );
+
+  const Section = ({ title, stepIdx, children }: { title: string; stepIdx: number; children: React.ReactNode }) => (
+    <section className="rounded-xl border border-border bg-card overflow-hidden">
+      <header className="flex items-center justify-between px-5 py-3 border-b border-border bg-gradient-subtle">
+        <h3 className="text-sm font-semibold text-foreground tracking-tight">{title}</h3>
+        <Button variant="ghost" size="sm" onClick={() => onEdit(stepIdx)} className="h-7 gap-1 text-primary text-xs">
+          <Pencil className="h-3 w-3" /> Modifier
+        </Button>
+      </header>
+      <div className="px-5 py-2">{children}</div>
+    </section>
+  );
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-card-foreground">Récapitulatif</h2>
-        <p className="text-sm text-card-foreground/60">Vérifiez les informations avant d'envoyer</p>
+        <h2 className="text-2xl font-semibold text-foreground tracking-tight">Récapitulatif</h2>
+        <p className="text-sm text-muted-foreground mt-1">Vérifiez les informations avant d'envoyer votre demande.</p>
       </div>
 
-      <div className="sticky top-4 z-10 rounded-lg border border-border bg-background/95 p-4 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/85">
-        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Type de profil recherché</p>
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Hero summary card */}
+      <div className="relative overflow-hidden rounded-xl border border-border bg-gradient-subtle p-5">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,hsl(var(--primary)/0.08),transparent_50%)] pointer-events-none" />
+        <div className="relative flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Type de profil</p>
+              <p className="text-base font-semibold text-foreground">{getTalentTypeLabel(data.talentType)}</p>
+            </div>
+          </div>
           <TalentTypeBadge talentType={data.talentType} large showHint />
-          <span className="text-sm font-medium text-card-foreground">{getTalentTypeLabel(data.talentType)}</span>
         </div>
       </div>
 
       <Section title="Profil recherché" stepIdx={1}>
-        <div className="space-y-3">
-          <div className="flex justify-between text-sm">
-            <span className="text-card-foreground/60">Domaine</span>
-            <span className="text-card-foreground font-medium">{data.domain}</span>
-          </div>
+        <dl>
+          <Row label="Domaine" value={data.domain} />
           {data.mustHaveSkills.length > 0 && (
-            <div>
-              <p className="text-xs text-card-foreground/50 mb-1">Must have</p>
-              <div className="flex flex-wrap gap-1">{data.mustHaveSkills.map((s) => <Badge key={s} className="bg-primary text-primary-foreground">{s}</Badge>)}</div>
-            </div>
+            <Row
+              label="Must have"
+              value={
+                <div className="flex flex-wrap gap-1 justify-end">
+                  {data.mustHaveSkills.map((s) => (
+                    <Badge key={s} className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">{s}</Badge>
+                  ))}
+                </div>
+              }
+            />
           )}
           {data.niceToHaveSkills.length > 0 && (
-            <div>
-              <p className="text-xs text-card-foreground/50 mb-1">Nice to have</p>
-              <div className="flex flex-wrap gap-1">{data.niceToHaveSkills.map((s) => <Badge key={s} variant="outline" className="border-card-foreground/20 text-card-foreground">{s}</Badge>)}</div>
-            </div>
+            <Row
+              label="Nice to have"
+              value={
+                <div className="flex flex-wrap gap-1 justify-end">
+                  {data.niceToHaveSkills.map((s) => (
+                    <Badge key={s} variant="outline">{s}</Badge>
+                  ))}
+                </div>
+              }
+            />
           )}
           {data.mustHaveSoftSkills.length > 0 && (
-            <div>
-              <p className="text-xs text-card-foreground/50 mb-1">Soft skills (must)</p>
-              <div className="flex flex-wrap gap-1">{data.mustHaveSoftSkills.map((s) => <Badge key={s} variant="secondary">{s}</Badge>)}</div>
-            </div>
+            <Row
+              label="Soft skills"
+              value={
+                <div className="flex flex-wrap gap-1 justify-end">
+                  {data.mustHaveSoftSkills.map((s) => (
+                    <Badge key={s} variant="secondary">{s}</Badge>
+                  ))}
+                </div>
+              }
+            />
           )}
           {data.languages.length > 0 && (
-            <div>
-              <p className="text-xs text-card-foreground/50 mb-1">Langues</p>
-              <div className="flex flex-wrap gap-1">{data.languages.map((l) => <Badge key={l.name} variant="secondary">{l.name} ({l.level}/5)</Badge>)}</div>
-            </div>
+            <Row
+              label="Langues"
+              value={
+                <div className="flex flex-wrap gap-1 justify-end">
+                  {data.languages.map((l) => (
+                    <Badge key={l.name} variant="secondary">{l.name} · {l.level}/5</Badge>
+                  ))}
+                </div>
+              }
+            />
           )}
-          {data.diploma && (
-            <div className="flex justify-between text-sm">
-              <span className="text-card-foreground/60">Diplôme</span>
-              <span className="text-card-foreground">{data.diploma}</span>
-            </div>
-          )}
-        </div>
+          {data.diploma && <Row label="Diplôme" value={data.diploma} />}
+        </dl>
       </Section>
-
-      <Separator className="bg-card-foreground/10" />
 
       <Section title="Détails du poste" stepIdx={1}>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between"><span className="text-card-foreground/60">Titre</span><span className="text-card-foreground font-medium">{data.title}</span></div>
-          <div className="flex justify-between"><span className="text-card-foreground/60">Description</span><span className="text-card-foreground text-right max-w-[60%]">{data.description}</span></div>
-          <div className="flex justify-between"><span className="text-card-foreground/60">Talents</span><span className="text-card-foreground">{data.talentsNumber}</span></div>
+        <dl>
+          <Row label="Titre" value={data.title} />
+          <Row label="Description" value={<span className="text-muted-foreground">{data.description}</span>} />
+          <Row label="Talents recherchés" value={<span className="tabular-nums">{data.talentsNumber}</span>} />
           {data.talentType === "student" && (
-            <div className="flex justify-between"><span className="text-card-foreground/60">Jours/semaine</span><span className="text-card-foreground">{data.daysPerWeek}</span></div>
+            <Row label="Jours / semaine" value={<span className="tabular-nums">{data.daysPerWeek}</span>} />
           )}
-          <div className="flex justify-between"><span className="text-card-foreground/60">{data.talentType === "graduate" ? "Contrat" : "Horaires"}</span><span className="text-card-foreground">{scheduleLabel}</span></div>
-          <div className="flex justify-between"><span className="text-card-foreground/60">Mode</span><span className="text-card-foreground capitalize">{data.workMode}</span></div>
-          {data.workLocation && (
-            <div className="flex justify-between"><span className="text-card-foreground/60">Adresse</span><span className="text-card-foreground text-right max-w-[60%]">{data.workLocation}</span></div>
-          )}
-        </div>
+          <Row label={data.talentType === "graduate" ? "Contrat" : "Horaires"} value={scheduleLabel} />
+          <Row label="Mode de travail" value={<span className="capitalize">{data.workMode}</span>} />
+          {data.workLocation && <Row label="Adresse" value={data.workLocation} />}
+        </dl>
       </Section>
 
-      <div className="flex justify-between pt-4">
-        <Button variant="outline" onClick={onBack} className="gap-2 border-card-foreground/20 text-card-foreground">
+      <div className="flex items-center justify-between pt-2">
+        <Button variant="outline" onClick={onBack} className="gap-2">
           <ArrowLeft className="h-4 w-4" /> Retour
         </Button>
-        <Button onClick={handleSubmit} disabled={loading} className="gap-2">
+        <Button onClick={handleSubmit} disabled={loading} variant="gradient" size="lg" className="gap-2 shadow-pop">
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           {loading ? "Envoi..." : "Envoyer la demande"}
         </Button>
