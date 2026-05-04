@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Upload, FileText, Loader2, Users, RefreshCw, Link as LinkIcon, Info, CheckCircle2, AlertTriangle, XCircle, Copy, ExternalLink } from "lucide-react";
