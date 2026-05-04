@@ -61,6 +61,18 @@ const FLAG_STYLES: Record<string, string> = {
   red: "bg-destructive text-destructive-foreground",
 };
 
+const FLAG_DOT: Record<string, string> = {
+  green: "bg-success",
+  yellow: "bg-warning",
+  red: "bg-destructive",
+};
+
+const FLAG_RING: Record<string, string> = {
+  green: "ring-success/30 text-success",
+  yellow: "ring-warning/30 text-warning",
+  red: "ring-destructive/30 text-destructive",
+};
+
 export const CandidatesSection = ({ requestId }: { requestId: string }) => {
   const [candidates, setCandidates] = useState<Candidate[]>([]);
   const [loading, setLoading] = useState(true);
