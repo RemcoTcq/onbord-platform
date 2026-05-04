@@ -137,6 +137,75 @@
     background-size: 16px 16px;
   }
 
+  /* Grid lines background (Vercel-style) */
+  .grid-lines-bg {
+    background-image:
+      linear-gradient(to right, hsl(var(--foreground) / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.04) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  /* Mesh gradient hero (premium feel) */
+  .mesh-hero {
+    background-color: hsl(222 47% 11%);
+    background-image:
+      radial-gradient(at 12% 18%, hsl(221 83% 53% / 0.55) 0px, transparent 50%),
+      radial-gradient(at 82% 12%, hsl(265 85% 60% / 0.45) 0px, transparent 50%),
+      radial-gradient(at 70% 88%, hsl(199 89% 55% / 0.40) 0px, transparent 55%),
+      radial-gradient(at 18% 92%, hsl(280 70% 55% / 0.35) 0px, transparent 50%);
+  }
+  .mesh-hero-noise::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.5'/></svg>");
+    opacity: 0.18;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  /* Animated gradient border */
+  .gradient-border {
+    position: relative;
+    background: hsl(var(--card));
+    border-radius: var(--radius);
+  }
+  .gradient-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.5), hsl(265 85% 60% / 0.3), transparent 60%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+            mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Aurora pulse */
+  @keyframes aurora {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.7; }
+    50% { transform: translate(20px, -10px) scale(1.1); opacity: 1; }
+  }
+  .animate-aurora { animation: aurora 8s ease-in-out infinite; }
+
+  /* Marching ants progress */
+  @keyframes march {
+    0% { background-position: 0 0; }
+    100% { background-position: 32px 0; }
+  }
+  .animate-march {
+    background-image: linear-gradient(90deg, hsl(var(--primary)) 50%, hsl(var(--primary) / 0.6) 50%);
+    background-size: 16px 100%;
+    animation: march 1.2s linear infinite;
+  }
+
+  /* Number ticker glow */
+  .text-glow-primary {
+    text-shadow: 0 0 24px hsl(var(--primary) / 0.35);
+  }
+
   /* CTA shine sweep */
   .animate-shine {
     position: relative;
