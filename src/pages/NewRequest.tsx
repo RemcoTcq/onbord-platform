@@ -127,45 +127,53 @@ const NewRequest = () => {
 
   const progressPercent = ((step + 1) / steps.length) * 100;
 
+  const stepTitles = ["Recherche", "Formulaire", "Récapitulatif"];
+
   return (
     <AppLayout>
-      <div className="mx-auto max-w-3xl">
-        {/* Subtle header — title + save status inline */}
-        <div className="flex items-center gap-3 mb-6">
-          <h1 className="text-[15px] font-semibold tracking-tight text-foreground">Nouvelle demande</h1>
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            {saveStatus === "saving" && (
-              <>
-                <Loader2 className="h-3 w-3 animate-spin" />
-                <span>Sauvegarde…</span>
-              </>
-            )}
-            {saveStatus === "saved" && (
-              <>
-                <span className="h-1.5 w-1.5 rounded-full bg-success" />
-                <span>Enregistré</span>
-              </>
-            )}
+      <div className="-mx-4 lg:-mx-8 -mt-6 lg:-mt-8">
+        {/* Subtle page header with underline */}
+        <div className="border-b border-border/60">
+          <div className="flex items-center gap-3 px-4 lg:px-8 h-11">
+            <h1 className="text-[13px] font-semibold tracking-tight text-foreground">
+              {stepTitles[step]}
+            </h1>
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              {saveStatus === "saving" && (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <span>Sauvegarde…</span>
+                </>
+              )}
+              {saveStatus === "saved" && (
+                <>
+                  <span className="h-1.5 w-1.5 rounded-full bg-success" />
+                  <span>Enregistré</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="animate-fade-in">
-          {step === 0 && <StepNaturalLanguage data={data} onChange={handleChange} onNext={() => setStep(1)} />}
-          {step === 1 && (
-            <StepProfileAndJob data={data} onChange={handleChange} onNext={() => setStep(2)} onBack={() => setStep(0)} />
-          )}
-          {step === 2 && (
-            <StepRecap
-              data={data}
-              onBack={() => setStep(1)}
-              onEdit={setStep}
-              draftId={draftId}
-              onSubmitted={(id) => {
-                setSubmittedId(id);
-                setSubmitted(true);
-              }}
-            />
-          )}
+        <div className="px-4 lg:px-8 py-6 lg:py-8">
+          <div className="mx-auto max-w-3xl animate-fade-in">
+            {step === 0 && <StepNaturalLanguage data={data} onChange={handleChange} onNext={() => setStep(1)} />}
+            {step === 1 && (
+              <StepProfileAndJob data={data} onChange={handleChange} onNext={() => setStep(2)} onBack={() => setStep(0)} />
+            )}
+            {step === 2 && (
+              <StepRecap
+                data={data}
+                onBack={() => setStep(1)}
+                onEdit={setStep}
+                draftId={draftId}
+                onSubmitted={(id) => {
+                  setSubmittedId(id);
+                  setSubmitted(true);
+                }}
+              />
+            )}
+          </div>
         </div>
       </div>
     </AppLayout>
