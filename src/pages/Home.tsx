@@ -18,6 +18,7 @@ import {
   FileSignature,
   CreditCard,
   Check,
+  Plus,
 } from "lucide-react";
 
 import { STATUSES } from "@/lib/constants";
@@ -78,147 +79,173 @@ const Home = () => {
   ];
 
   const steps = [
-    { icon: Briefcase, title: "L'entreprise publie un poste", desc: "Vous décrivez votre besoin en quelques minutes." },
-    { icon: Sparkles, title: "Onbord présente les meilleurs matchs", desc: "Notre équipe sélectionne les profils les plus pertinents." },
-    { icon: UserCheck, title: "Votre équipe RH sélectionne les profils", desc: "Vous validez les candidats qui vous correspondent." },
-    { icon: FileSignature, title: "Le contrat est signé", desc: "Nous gérons toute la partie administrative." },
-    { icon: CreditCard, title: "Paiement uniquement si recrutement finalisé", desc: "Aucun frais tant que le recrutement n'est pas finalisé." },
+    { icon: Briefcase, title: "Vous publiez un poste", desc: "Décrivez votre besoin en quelques minutes." },
+    { icon: Sparkles, title: "Nous matchons les profils", desc: "Notre équipe sélectionne les talents les plus pertinents." },
+    { icon: UserCheck, title: "Vous validez vos candidats", desc: "Choisissez les profils qui vous correspondent." },
+    { icon: FileSignature, title: "Le contrat est signé", desc: "On gère toute la partie administrative." },
+    { icon: CreditCard, title: "Vous payez à la finalisation", desc: "Aucun frais tant que le recrutement n'est pas conclu." },
   ];
 
   const currentStep = latest ? getStepIndex(latest.status) : 0;
+  const progressPercent =
+    PROGRESS_STEPS.length > 1 ? (currentStep / (PROGRESS_STEPS.length - 1)) * 100 : 0;
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-5xl space-y-6">
-        {/* Welcome */}
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground lg:text-3xl">
-            Bonjour {firstName} <span className="inline-block">👋</span>
-          </h1>
-          <p className="mt-1 text-[14px] text-muted-foreground">
-            Voici un aperçu de votre activité de recrutement.
-          </p>
-        </div>
+      <div className="mx-auto max-w-6xl space-y-8">
+        {/* Header */}
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
+              Bonjour {firstName || "👋"}
+              {firstName && <span className="ml-1.5 inline-block">👋</span>}
+            </h1>
+            <p className="mt-1.5 text-[14px] text-muted-foreground">
+              Voici un aperçu de votre activité de recrutement.
+            </p>
+          </div>
+          <Link to="/request/new">
+            <Button variant="gradient" size="lg" className="gap-1.5">
+              <Plus className="h-4 w-4" />
+              Nouvelle demande
+            </Button>
+          </Link>
+        </header>
 
-        {/* Metrics */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {metrics.map((m) => (
-            <Card key={m.label} className="card-hover">
-              <CardContent className="flex items-center gap-4 p-5">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-                  <m.icon className="h-5 w-5 text-foreground" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-card-foreground">{m.value}</p>
-                  <p className="text-[13px] text-muted-foreground">{m.label}</p>
-                </div>
-              </CardContent>
-            </Card>
+        {/* Metrics — Linear-style stat blocks */}
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {metrics.map((m, i) => (
+            <div
+              key={m.label}
+              className="surface group relative overflow-hidden rounded-lg p-4 transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md hover:border-border animate-slide-up-fade"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
+              <m.icon className="absolute right-3 top-3 h-9 w-9 text-foreground/[0.05] transition-transform duration-300 group-hover:scale-110 group-hover:text-primary/20" />
+              <p className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+                {m.label}
+              </p>
+              <p className="mt-2 text-3xl font-semibold tabular-nums text-foreground leading-none">
+                {m.value}
+              </p>
+            </div>
           ))}
-        </div>
+        </section>
 
-        {/* Latest request with progress */}
+        {/* Latest request — hero card */}
         {latest && (
-          <Card className="overflow-hidden">
-            <CardContent className="p-6 lg:p-7">
-              <div className="mb-5 flex items-start justify-between gap-4">
-                <div>
-                  <div className="section-title mb-1">Dernière demande en cours</div>
-                  <h2 className="text-lg font-semibold text-card-foreground">{latest.title}</h2>
-                  <p className="mt-1 text-[13px] text-muted-foreground">
-                    Créée le {new Date(latest.created_at).toLocaleDateString("fr-FR")}
-                  </p>
+          <section className="surface-subtle relative overflow-hidden rounded-xl p-6 lg:p-7">
+            <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="section-title">Dernière demande</span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-success/10 text-success px-2 py-0.5 text-[10.5px] font-medium border border-success/20">
+                    <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-soft" />
+                    En cours
+                  </span>
                 </div>
-                <Link to={`/request/${latest.id}`}>
-                  <Button variant="outline" size="sm" className="gap-1.5 shrink-0">
-                    Voir les détails
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </Link>
+                <h2 className="mt-1.5 text-lg font-semibold text-foreground">{latest.title}</h2>
+                <p className="mt-0.5 text-[12.5px] text-muted-foreground">
+                  Créée le {new Date(latest.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                </p>
               </div>
+              <Link to={`/request/${latest.id}`}>
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  Voir les détails
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </Link>
+            </div>
 
-              {/* Progress bar */}
-              <div className="relative pt-2">
-                <div className="absolute left-0 right-0 top-[calc(0.5rem+0.875rem)] h-0.5 bg-muted" />
-                <div
-                  className="absolute left-0 top-[calc(0.5rem+0.875rem)] h-0.5 bg-primary transition-all duration-500"
-                  style={{
-                    width:
-                      PROGRESS_STEPS.length > 1
-                        ? `${(currentStep / (PROGRESS_STEPS.length - 1)) * 100}%`
-                        : "0%",
-                  }}
-                />
-                <div
-                  className="relative grid gap-2"
-                  style={{ gridTemplateColumns: `repeat(${PROGRESS_STEPS.length}, minmax(0, 1fr))` }}
-                >
-                  {PROGRESS_STEPS.map((step, i) => {
-                    const done = i < currentStep;
-                    const current = i === currentStep;
-                    return (
-                      <div key={step.key} className="flex flex-col items-center text-center">
-                        <div
-                          className={`flex h-7 w-7 items-center justify-center rounded-full border-2 bg-card transition-all ${
-                            done
-                              ? "border-primary bg-primary text-primary-foreground"
-                              : current
-                              ? "border-primary text-primary"
-                              : "border-border text-muted-foreground"
-                          }`}
-                        >
-                          {done ? (
-                            <Check className="h-3.5 w-3.5" />
-                          ) : (
-                            <span className="text-[11px] font-semibold">{i + 1}</span>
-                          )}
-                        </div>
-                        <span
-                          className={`mt-2 text-[11px] font-medium leading-tight ${
-                            current || done ? "text-foreground" : "text-muted-foreground"
-                          }`}
-                        >
-                          {step.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
+            {/* Segmented progress timeline */}
+            <div>
+              <div className="flex gap-1">
+                {PROGRESS_STEPS.map((step, i) => {
+                  const done = i < currentStep;
+                  const current = i === currentStep;
+                  return (
+                    <div
+                      key={step.key}
+                      className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${
+                        done
+                          ? "bg-success"
+                          : current
+                          ? "bg-primary animate-pulse-soft"
+                          : "bg-border"
+                      }`}
+                    />
+                  );
+                })}
               </div>
-            </CardContent>
-          </Card>
+              <div
+                className="mt-3 grid gap-2"
+                style={{ gridTemplateColumns: `repeat(${PROGRESS_STEPS.length}, minmax(0, 1fr))` }}
+              >
+                {PROGRESS_STEPS.map((step, i) => {
+                  const done = i < currentStep;
+                  const current = i === currentStep;
+                  return (
+                    <div key={step.key} className="flex flex-col items-start gap-0.5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70 tabular-nums">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span
+                        className={`text-[11.5px] font-medium leading-tight line-clamp-2 ${
+                          current
+                            ? "text-foreground"
+                            : done
+                            ? "text-foreground/80"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {step.label}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="mt-3 text-[11px] text-muted-foreground tabular-nums">
+                {Math.round(progressPercent)}% complété
+              </p>
+            </div>
+          </section>
         )}
 
         {/* How it works */}
-        <div>
-          <h2 className="section-title mb-4">Comment ça marche</h2>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="section-title">Comment ça marche</h2>
+            <span className="text-[11px] text-muted-foreground">5 étapes</span>
+          </div>
+          <div className="grid gap-px overflow-hidden rounded-lg border border-border/70 bg-border/70 md:grid-cols-2 lg:grid-cols-5">
             {steps.map((step, i) => (
-              <Card key={i} className="card-hover">
-                <CardContent className="p-5">
-                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
-                    <step.icon className="h-4 w-4 text-foreground" />
-                  </div>
-                  <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-1">
-                    Étape {i + 1}
-                  </div>
-                  <h3 className="text-[14px] font-semibold text-card-foreground leading-snug">
-                    {step.title}
-                  </h3>
-                  <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
-                    {step.desc}
-                  </p>
-                </CardContent>
-              </Card>
+              <div
+                key={i}
+                className="group relative bg-card p-5 transition-colors duration-150 hover:bg-muted/30"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-2xl font-bold tabular-nums text-muted-foreground/30 leading-none">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <step.icon className="h-4 w-4 text-muted-foreground/50 transition-colors group-hover:text-primary" />
+                </div>
+                <h3 className="text-[13.5px] font-semibold text-foreground leading-snug">
+                  {step.title}
+                </h3>
+                <p className="mt-1.5 text-[12px] text-muted-foreground leading-relaxed">
+                  {step.desc}
+                </p>
+              </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* CTA */}
-        <Card className="overflow-hidden">
-          <CardContent className="flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-7">
+        {/* Bottom CTA */}
+        <section className="surface relative overflow-hidden rounded-xl">
+          <div className="absolute inset-0 dot-grid-bg opacity-60" />
+          <div className="absolute inset-0 bg-gradient-subtle" />
+          <div className="relative flex flex-col items-start gap-4 p-6 sm:flex-row sm:items-center sm:justify-between lg:p-7">
             <div>
-              <h3 className="text-lg font-semibold text-card-foreground">
+              <h3 className="text-lg font-semibold text-foreground">
                 Prêt à recruter votre prochain talent ?
               </h3>
               <p className="mt-1 text-[13px] text-muted-foreground">
@@ -226,13 +253,13 @@ const Home = () => {
               </p>
             </div>
             <Link to="/request/new">
-              <Button size="lg" className="gap-2">
+              <Button variant="gradient" size="lg" className="gap-1.5">
                 Créer une nouvelle demande
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       </div>
     </AppLayout>
   );

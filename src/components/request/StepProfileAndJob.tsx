@@ -182,25 +182,29 @@ export const StepProfileAndJob = ({ data, onChange, onNext, onBack }: Props) => 
     onRemove: (s: string) => void;
     label: string;
   }) => (
-    <div className="grid grid-cols-5 gap-3 mt-3">
-      <div className="col-span-3 rounded-lg border border-card-foreground/10 p-3 bg-card-foreground/[0.02]">
-        <p className="text-xs font-semibold text-card-foreground/60 mb-2 uppercase tracking-wider">Must have</p>
-        <div className="flex flex-wrap gap-1.5 min-h-[40px]">
+    <div className="grid grid-cols-5 gap-2.5 mt-3">
+      <div className="col-span-3 rounded-lg border border-border bg-muted/30 p-3">
+        <p className="text-[10.5px] font-semibold text-muted-foreground mb-2 uppercase tracking-[0.08em] flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" /> Must have
+        </p>
+        <div className="flex flex-wrap gap-1.5 min-h-[36px]">
           {mustHave.map((s) => (
-            <Badge key={s} className="gap-1 bg-primary text-primary-foreground cursor-pointer group" onClick={() => onMoveToNice(s)}>
+            <Badge key={s} className="gap-1 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer group" onClick={() => onMoveToNice(s)}>
               {s}
               <ArrowRight className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <X className="h-3 w-3 opacity-60 hover:opacity-100" onClick={(e) => { e.stopPropagation(); onRemove(s); }} />
+              <X className="h-3 w-3 opacity-70 hover:opacity-100" onClick={(e) => { e.stopPropagation(); onRemove(s); }} />
             </Badge>
           ))}
-          {mustHave.length === 0 && <p className="text-xs text-card-foreground/30 italic">Sélectionnez des {label}</p>}
+          {mustHave.length === 0 && <p className="text-[11px] text-muted-foreground/60 italic">Sélectionnez des {label}</p>}
         </div>
       </div>
-      <div className="col-span-2 rounded-lg border border-card-foreground/10 p-3 bg-card-foreground/[0.02]">
-        <p className="text-xs font-semibold text-card-foreground/60 mb-2 uppercase tracking-wider">Nice to have</p>
-        <div className="flex flex-wrap gap-1.5 min-h-[40px]">
+      <div className="col-span-2 rounded-lg border border-border bg-muted/30 p-3">
+        <p className="text-[10.5px] font-semibold text-muted-foreground mb-2 uppercase tracking-[0.08em] flex items-center gap-1.5">
+          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" /> Nice to have
+        </p>
+        <div className="flex flex-wrap gap-1.5 min-h-[36px]">
           {niceToHave.map((s) => (
-            <Badge key={s} variant="outline" className="gap-1 cursor-pointer group border-card-foreground/20 text-card-foreground" onClick={() => onMoveToMust(s)}>
+            <Badge key={s} variant="outline" className="gap-1 rounded-md cursor-pointer group border-border bg-card text-foreground hover:bg-muted/60" onClick={() => onMoveToMust(s)}>
               <ArrowLeft className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
               {s}
               <X className="h-3 w-3 opacity-60 hover:opacity-100" onClick={(e) => { e.stopPropagation(); onRemove(s); }} />

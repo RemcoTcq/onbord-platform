@@ -2,11 +2,18 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(({ className, ...props }, ref) => (
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { variant?: "default" | "subtle" | "interactive" }
+>(({ className, variant = "default", ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "rounded-xl border border-border/70 bg-card text-card-foreground shadow-[0_1px_2px_rgba(15,23,42,0.04)]",
+      "rounded-lg text-card-foreground transition-all duration-150",
+      variant === "default" && "border border-border/70 bg-card shadow-sm",
+      variant === "subtle" && "bg-muted/30 border border-transparent",
+      variant === "interactive" &&
+        "border border-border/70 bg-card shadow-sm cursor-pointer hover:-translate-y-0.5 hover:shadow-md hover:border-border",
       className,
     )}
     {...props}
@@ -23,7 +30,7 @@ CardHeader.displayName = "CardHeader";
 
 const CardTitle = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLHeadingElement>>(
   ({ className, ...props }, ref) => (
-    <h3 ref={ref} className={cn("text-2xl font-semibold leading-none tracking-tight", className)} {...props} />
+    <h3 ref={ref} className={cn("text-lg font-semibold leading-tight tracking-tight", className)} {...props} />
   ),
 );
 CardTitle.displayName = "CardTitle";

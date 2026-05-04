@@ -9,8 +9,8 @@ import { StepNaturalLanguage } from "@/components/request/StepNaturalLanguage";
 import { StepProfileAndJob } from "@/components/request/StepProfileAndJob";
 import { StepRecap } from "@/components/request/StepRecap";
 import { StepConfirmation } from "@/components/request/StepConfirmation";
-import { Card, CardContent } from "@/components/ui/card";
-import { Check, Save } from "lucide-react";
+import { Check, Save, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const steps = ["Recherche IA", "Formulaire", "Récap"];
 
@@ -30,7 +30,10 @@ const NewRequest = () => {
   useEffect(() => {
     const loadDraft = async () => {
       const id = searchParams.get("draft");
-      if (!id) { initialized.current = true; return; }
+      if (!id) {
+        initialized.current = true;
+        return;
+      }
       const { data: row } = await supabase.from("requests").select("*").eq("id", id).single();
       if (row) {
         setDraftId(id);
@@ -55,7 +58,6 @@ const NewRequest = () => {
           workLocation: (row as any).work_location || "",
           employmentType: ((row as any).employment_type as any) || null,
         });
-        // Skip the AI step when editing an existing draft
         setStep(1);
       }
       initialized.current = true;
@@ -123,69 +125,96 @@ const NewRequest = () => {
     );
   }
 
+  const progressPercent = ((step + 1) / steps.length) * 100;
+
   return (
     <AppLayout>
       <div className="mx-auto max-w-3xl space-y-6">
-        <div className="flex items-center justify-end gap-2 text-xs">
+        {/* Save status discreet */}
+        <div className="flex items-center justify-end gap-1.5 text-[11px] h-4">
           {saveStatus === "saving" && (
             <span className="flex items-center gap-1 text-muted-foreground">
-              <Save className="h-3 w-3 animate-pulse" /> Sauvegarde...
+              <Loader2 className="h-3 w-3 animate-spin" /> Sauvegarde…
             </span>
           )}
           {saveStatus === "saved" && (
             <span className="flex items-center gap-1 text-success">
-              <Check className="h-3 w-3" /> Brouillon enregistré
+              <span className="h-1.5 w-1.5 rounded-full bg-success animate-pulse-soft" />
+              Brouillon enregistré
             </span>
           )}
         </div>
 
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              {steps.map((label, i) => (
-                <div key={label} className="flex items-center gap-2">
-                  <button
-                    onClick={() => i < step && setStep(i)}
-                    disabled={i > step}
-                    className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-semibold transition-all ${
-                      i < step
-                        ? "bg-success text-success-foreground cursor-pointer"
-                        : i === step
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card-foreground/10 text-card-foreground/40"
-                    }`}
+        {/* Stepper — Vercel-style */}
+        <div className="space-y-3">
+          {/* Progress bar */}
+          <div className="relative h-0.5 w-full overflow-hidden rounded-full bg-border">
+            <div
+              className="absolute inset-y-0 left-0 bg-primary transition-all duration-500 ease-out"
+              style={{ width: `${progressPercent}%` }}
+            />
+          </div>
+          {/* Step labels */}
+          <div className="grid grid-cols-3 gap-2">
+            {steps.map((label, i) => {
+              const done = i < step;
+              const current = i === step;
+              return (
+                <button
+                  key={label}
+                  type="button"
+                  onClick={() => i < step && setStep(i)}
+                  disabled={i > step}
+                  className={cn(
+                    "group flex items-center gap-2 text-left transition-colors",
+                    i < step && "cursor-pointer hover:text-foreground",
+                    i > step && "cursor-default",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10.5px] font-semibold transition-all tabular-nums",
+                      done && "bg-success text-success-foreground",
+                      current && "bg-primary text-primary-foreground ring-4 ring-primary/15",
+                      !done && !current && "bg-muted text-muted-foreground",
+                    )}
                   >
-                    {i < step ? <Check className="h-4 w-4" /> : i + 1}
-                  </button>
-                  <span className={`hidden text-sm sm:inline ${
-                    i <= step ? "font-medium text-card-foreground" : "text-card-foreground/40"
-                  }`}>
+                    {done ? <Check className="h-3 w-3" /> : i + 1}
+                  </span>
+                  <span
+                    className={cn(
+                      "text-[12.5px] font-medium",
+                      current && "text-foreground",
+                      done && "text-foreground/80",
+                      !done && !current && "text-muted-foreground",
+                    )}
+                  >
                     {label}
                   </span>
-                  {i < steps.length - 1 && (
-                    <div className={`mx-2 h-px w-6 sm:w-12 ${i < step ? "bg-success" : "bg-card-foreground/10"}`} />
-                  )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-        <Card>
-          <CardContent className="p-6 lg:p-8">
-            {step === 0 && <StepNaturalLanguage data={data} onChange={handleChange} onNext={() => setStep(1)} />}
-            {step === 1 && <StepProfileAndJob data={data} onChange={handleChange} onNext={() => setStep(2)} onBack={() => setStep(0)} />}
-            {step === 2 && (
-              <StepRecap
-                data={data}
-                onBack={() => setStep(1)}
-                onEdit={setStep}
-                draftId={draftId}
-                onSubmitted={(id) => { setSubmittedId(id); setSubmitted(true); }}
-              />
-            )}
-          </CardContent>
-        </Card>
+        <div className="surface rounded-xl p-6 lg:p-8 animate-fade-in">
+          {step === 0 && <StepNaturalLanguage data={data} onChange={handleChange} onNext={() => setStep(1)} />}
+          {step === 1 && (
+            <StepProfileAndJob data={data} onChange={handleChange} onNext={() => setStep(2)} onBack={() => setStep(0)} />
+          )}
+          {step === 2 && (
+            <StepRecap
+              data={data}
+              onBack={() => setStep(1)}
+              onEdit={setStep}
+              draftId={draftId}
+              onSubmitted={(id) => {
+                setSubmittedId(id);
+                setSubmitted(true);
+              }}
+            />
+          )}
+        </div>
       </div>
     </AppLayout>
   );
